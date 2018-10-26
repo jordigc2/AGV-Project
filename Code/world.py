@@ -1,9 +1,11 @@
 
 import xml.etree.ElementTree as ET
 import numpy as np
+import csv
 
 productDescrURL = "./Products_Composition/ProductsDescription.xml"
 compDescrURL = "./Products_Composition/ComponentsDescription.xml"
+prodListURL = "./Products_Composition/productionPlan.csv"
 
 dicProd = {}
 dicCompPos = {}
@@ -23,7 +25,8 @@ class Product():
 
 class World():
 	def __init__(self):
-		self.prodList = []
+		self.availableProd = []
+		self.demandedProd = np.array([])
 
 	def productsSetUp(self):
 
@@ -47,9 +50,15 @@ class World():
 				else:
 					comArr = np.insert(comArr, len(comArr), component, 0)
 			product.setComponents(comArr)
-			self.prodList.append(product)
+			self.availableProd.append(product)
+
+	def readDemandedProductsCSV(prodListURL):
+		pass
+
+
 
 world = World()
 world.productsSetUp()
+world.readDemandedProductsCSV(prodListURL)
 
 
