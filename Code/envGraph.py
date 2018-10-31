@@ -9,14 +9,15 @@ from operator import attrgetter
 
 
 class Node:
-	def __init__(self,x,y, nodeId):
+	def __init__(self,x, y, _id, component = -1):
 		self.x = x
 		self.y = y
-		self.id = nodeId
+		self.id = _id
 		self.neigh = []
 		self.prevNeigh = 0
 		self.dijkstraDistance = sys.maxsize #set a huge number to the distances
 		self.visited = False
+		self.component = component
 
 	#used when inserting nodes to a list, to have the list sorted by distance
 	def __lt__(self, other):
@@ -37,7 +38,7 @@ class Graph:
 			count += 1
 
 		for comp in self.world.availableComp:
-			node = Node(comp.comPos[0], comp.comPos[1], comp.compID+count-1)
+			node = Node(comp.comPos[0], comp.comPos[1], comp.compID+count-1, comp)
 			self.listOfNodes.append(node)
 
 		self.setNeighbours()
@@ -90,27 +91,105 @@ class Graph:
 		for comp in product.compList:
 			node = self.listOfNodes[comp.compID+self.world.numObjects-1]
 			bisect.insort_left(compNodes, node)
-		for node in compNodes:
-			index = bisect.bisect(compNodes, node)
-			sortedCompList[index-1] = comp
 
-		return sortedCompList
+		return compNodes
+
+	def gotToWH(self, node, direction):
+		subPath = np.array([node])
+		while node.prevNeigh != 0:#insert to the subPath until reaching to the WH
+			node = node.prevNeigh
+			if direction == 0:#from WH to node
+				subPath = np.insert(subPath,0, node)
+			else:#from node to WH
+				subPath = np.insert(subPath,len(subPath), node)
+		return subPath
+
+	def getClosestComp(self, nodeList, actNode):
+		minDis = sys.maxsize
+		closestComp = 0
+		for aux in nodeList:
+			if not aux.component.collected:
+				dist = math.sqrt((aux.x-actNode.x)**2+(aux.y-actNode.y)**2)
+				if dist < minDis:
+					minDis = dist
+					closestComp = aux
+		return closestComp
+
+
+	def generatePath(self, product, compTaken, actNode):
+		nodesComp = self.sortCompDist(product)
+		"""print("Components Sorted")
+		for node in nodesComp:
+			print(node.id)"""
+		path = np.array([], dtype="object")
+		pathCreated = False
+		FROM_HOME = 0
+		FROM_NODE = 1
+		while not pathCreated:
+			if compTaken == 1:
+				closestNode = self.getClosestComp(nodesComp, actNode)
+				if closestNode != 0:
+					path = np.insert(path,len(path),self.gotToWH(closestNode, FROM_NODE))
+					closestNode.component.collected = True
+					compTaken = 0
+			else:
+				for node in nodesComp:
+					if not node.component.collected:
+						#print("FirstComonent To take:", node.id)
+						node.component.collected = True
+						subPath = self.gotToWH(node, FROM_HOME)
+						if(len(path) > 0):
+							actNode = path[len(path)-1]
+
+						if(subPath[0].id == actNode.id):
+							subPath = np.delete(subPath,0)
+						path = np.insert(path,len(path),subPath)
+						"""print("path:")
+						for node in path:
+							print(node.id)"""
+						compTaken = 1
+						count2 = 0
+						actNode = node
+						closestNode = self.getClosestComp(nodesComp, actNode)
+						#if(closestNode != 0):
+						#	print("Closest:",closestNode.id)
+						if closestNode != 0:
+							path = np.insert(path,len(path),self.gotToWH(closestNode, FROM_NODE))
+							closestNode.component.collected = True
+							compTaken = 0
+				pathCreated = True
+
+		return path,compTaken
 
 	#Calculate all the steps to do for all the components needed.
 	def calculatePath(self, processItems = 5):
 		path = np.array([], dtype="object") #numpy array of nodes
-		compTaken = 0
 		optimalDistance = sys.maxsize
 		currentDistance = 0
+		compTaken = 0
+		actNode = self.listOfNodes[1]
 		for product in self.world.productsList:
 			product.uncollectComp()
-			sortedComp = self.sortCompDist(product)
+
+			if(len(path)>0):
+				actNode = path[len(path)-1]
+			prodPath,compTaken = self.generatePath(product, compTaken, actNode)
+
+			path = np.insert(path,len(path), prodPath)
+		if(compTaken == 1):
+			lastComp = path[len(path)-1]
+			path = np.delete(path,len(path)-1)
+			path = np.insert(path,len(path), self.gotToWH(lastComp,1)) 
+		return path
 
 
 
 
-
+t0 = time.time()
 graph = Graph()
 
 graph.calculateDijkstraDistances(0,0)
-graph.calculatePath()
+path = graph.calculatePath()
+
+print("time:", time.time()-t0)
+
