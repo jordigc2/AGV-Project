@@ -26,6 +26,10 @@ class Product():
 	def setComponents(self, compList):
 		self.compList = compList
 
+	def uncollectComp(self):
+		for comp in self.compList:
+			comp.collected = False
+
 class World():
 	def __init__(self):
 		print("Creating the World")
@@ -33,6 +37,7 @@ class World():
 		self.availableComp = []
 		self.demandedProd = np.array([], dtype=int)
 		self.componentsList = np.array([], dtype='object')
+		self.productsList = np.array([], dtype='object')
 		self.objectsPos = []
 		self.numObjects = 0
 
@@ -71,13 +76,11 @@ class World():
 			product = Product(prodID)
 			for comp in prod:
 				compID = int(comp.text)-1
+				comp = self.availableComp[compID]
+				comp.prodID = count
 				if comArr.size == 0:
-					comp = self.availableComp[compID]
-					comp.prodID = count
 					comArr = np.array([comp])
 				else:
-					comp = self.availableComp[compID]
-					comp.prodID = count
 					comArr = np.insert(comArr, len(comArr), comp, 0)
 			product.setComponents(comArr)
 			self.availableProd.append(product)
@@ -96,6 +99,7 @@ class World():
 	def setComponentsList(self):
 		#create the list of all the Components needed to create the Products
 		for prodID in self.demandedProd:
+			self.productsList = np.insert(self.productsList, len(self.productsList), self.availableProd[prodID-1])
 			prodCompList = self.availableProd[prodID-1].compList
 			self.componentsList = np.insert(self.componentsList, len(self.componentsList), prodCompList)
 

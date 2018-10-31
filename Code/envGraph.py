@@ -1,8 +1,10 @@
 import sys
 import world as wd
-import bisect
 import math
 import time
+import bisect
+import numpy as np
+from operator import attrgetter
 
 
 
@@ -16,6 +18,7 @@ class Node:
 		self.dijkstraDistance = sys.maxsize #set a huge number to the distances
 		self.visited = False
 
+	#used when inserting nodes to a list, to have the list sorted by distance
 	def __lt__(self, other):
 		return(self.dijkstraDistance < other.dijkstraDistance)
 
@@ -81,6 +84,33 @@ class Graph:
 
 				actualNode.visited = True
 
+	def sortCompDist(self, product):
+		compNodes = []
+		sortedCompList = [0]*len(product.compList)
+		for comp in product.compList:
+			node = self.listOfNodes[comp.compID+self.world.numObjects-1]
+			bisect.insort_left(compNodes, node)
+		for node in compNodes:
+			index = bisect.bisect(compNodes, node)
+			sortedCompList[index-1] = comp
+
+		return sortedCompList
+
+	#Calculate all the steps to do for all the components needed.
+	def calculatePath(self, processItems = 5):
+		path = np.array([], dtype="object") #numpy array of nodes
+		compTaken = 0
+		optimalDistance = sys.maxsize
+		currentDistance = 0
+		for product in self.world.productsList:
+			product.uncollectComp()
+			sortedComp = self.sortCompDist(product)
+
+
+
+
+
 graph = Graph()
 
 graph.calculateDijkstraDistances(0,0)
+graph.calculatePath()
