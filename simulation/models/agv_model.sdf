@@ -1,39 +1,38 @@
 <?xml version='1.0'?>
 <sdf version='1.4'>
   <model name="bitbot">
+    <static>false</static>
 
-     <static>false</static>
     <link name='chassis'>
       <inertial>
-        <mass>0.007</mass>
+        <mass>100</mass>
         <inertia> 
-          <ixx>0.0041667</ixx>       <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) -->
+          <ixx>1.216667</ixx>       <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) -->
           <ixy>0.0</ixy>         <!-- for a box: ixy = 0 -->
           <ixz>0.0</ixz>         <!-- for a box: ixz = 0 -->
-          <iyy>0.0141667</iyy>       <!-- for a box: iyy = 0.083 * mass * (x*x + z*z) -->
+          <iyy>1.216667</iyy>       <!-- for a box: iyy = 0.083 * mass * (x*x + z*z) -->
           <iyz>0.0</iyz>         <!-- for a box: iyz = 0 -->
-          <izz>0.0166667</izz>       <!-- for a box: izz = 0.083 * mass * (x*x + y*y) -->
+          <izz>2.016667</izz>       <!-- for a box: izz = 0.083 * mass * (x*x + y*y) -->
         </inertia>
       </inertial>
-
-      <pose>0 0 .075 0 0 0</pose>
+      <pose>0 0 .05 0 0 0</pose>
       <collision name='collision'>
         <geometry>
           <box>
-            <size>.4 .2 .1</size>
+            <size>.11 .11 .05</size>
           </box>
         </geometry>
       </collision>
       <visual name='visual'>
         <geometry>
           <box>
-            <size>.4 .2 .1</size>
+            <size>.11 .1 .05</size>
           </box>
         </geometry>
       </visual>
 
       <collision name='caster_collision'>
-        <pose>-0.15 0 -0.05 0 0 0</pose>
+        <pose>-0.03 0 -0.025 0 0 0</pose>
         <geometry>
           <sphere>
             <radius>.025</radius>
@@ -53,7 +52,7 @@
       </collision>
 
       <visual name='caster_visual'>
-        <pose>-0.15 0 -0.05 0 0 0</pose>
+        <pose>-0.03 0 -0.025 0 0 0</pose>
         <geometry>
           <sphere>
             <radius>.025</radius>
@@ -63,13 +62,13 @@
     </link>
 
     <link name="left_wheel">
-      <pose>0.1 0.1125 0.05 0 1.5707 1.5707</pose>
+      <pose>0.02 0.06 0.025 0 1.5707 1.5707</pose>
       <inertial>
-          <mass>0.2</mass>
+          <mass>10.0</mass>
           <inertia>
-            <ixx>0.000677083</ixx>
-            <iyy>0.000677083</iyy>
-            <izz>0.0003125</izz>
+            <ixx>0.00164583</ixx>
+            <iyy>0.00164583</iyy>
+            <izz>0.003125</izz>
             <ixy>0</ixy>
             <ixz>0</ixz>
             <iyz>0</iyz>
@@ -79,28 +78,28 @@
       <collision name="collision">
         <geometry>
           <cylinder>
-            <radius>.05</radius>
-            <length>.025</length>
+            <radius>.025</radius>
+            <length>.01</length>
           </cylinder>
         </geometry>
       </collision>
       <visual name="visual">
         <geometry>
           <cylinder>
-            <radius>.05</radius>
-            <length>.025</length>
+            <radius>.025</radius>
+            <length>.01</length>
           </cylinder>
         </geometry>
       </visual>
     </link>
     <link name="right_wheel">
-      <pose>0.1 -0.1125 0.05 0 1.5707 1.5707</pose>
+      <pose>0.02 -0.06 0.025 0 1.5707 1.5707</pose>
       <inertial>
-          <mass>0.2</mass>
+          <mass>10.0</mass>
           <inertia>
-            <ixx>0.000677083</ixx>
-            <iyy>0.000677083</iyy>
-            <izz>0.0003125</izz>
+            <ixx>0.00164583</ixx>
+            <iyy>0.00164583</iyy>
+            <izz>0.003125</izz>
             <ixy>0</ixy>
             <ixz>0</ixz>
             <iyz>0</iyz>
@@ -109,22 +108,22 @@
         <collision name="collision">
         <geometry>
           <cylinder>
-            <radius>.05</radius>
-            <length>.025</length>
+            <radius>.025</radius>
+            <length>.01</length>
           </cylinder>
         </geometry>
       </collision>
       <visual name="visual">
         <geometry>
           <cylinder>
-            <radius>.05</radius>
-            <length>.025</length>
+            <radius>.025</radius>
+            <length>.01</length>
           </cylinder>
         </geometry>
       </visual>
     </link>
     <joint type="revolute" name="left_wheel_joint">
-      <pose>0 0 -0.0125 0 0 0</pose>
+      <pose>0 0 -0.005 0 0 0</pose>
       <child>left_wheel</child>
       <parent>chassis</parent>
       <axis>
@@ -133,7 +132,7 @@
     </joint>
 
     <joint type="revolute" name="right_wheel_joint">
-      <pose>0 0 0.0125 0 0 0</pose>
+      <pose>0 0 0.005 0 0 0</pose>
       <child>right_wheel</child>
       <parent>chassis</parent>
       <axis>
@@ -141,19 +140,19 @@
       </axis>
     </joint>
 
-<plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+    <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
     <alwaysOn>true</alwaysOn>
     <updateRate>20</updateRate>
     <leftJoint>right_wheel_joint</leftJoint>
     <rightJoint>left_wheel_joint</rightJoint>
-    <wheelSeparation>0.225</wheelSeparation>
-    <wheelDiameter>0.1</wheelDiameter>
+    <wheelSeparation>0.12</wheelSeparation>
+    <wheelDiameter>0.05</wheelDiameter>
     <torque>1</torque>
     <commandTopic>cmd_vel</commandTopic>
     <odometryTopic>odom</odometryTopic>
     <odometryFrame>odom</odometryFrame>
     <robotBaseFrame>base_footprint</robotBaseFrame>
-  </plugin>
+    </plugin>
 
   </model>
 </sdf>
