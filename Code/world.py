@@ -32,6 +32,12 @@ class Product():
 
 class World():
 	def __init__(self):
+		"""
+			CONSTRUCTOR
+			Param: None
+			Return: None
+			Description: Read all the files to create the components and products and set the world objects and init the WH and robot components as empty.
+		"""
 		print("Creating the World")
 		self.availableProd = []
 		self.availableComp = []
@@ -41,6 +47,10 @@ class World():
 		self.objectsPos = []
 		self.numObjects = 0
 
+		self.compWareHouse = [0]*6 #In each position it can bee up to 3 components
+		self.compRobot = [0]*2 #Each position is the ID of a component node in the graph
+		self.prevProdDone = -1 #ID of a product to know wich products are the ones needed again
+
 		self.componentsSetUp()
 		self.productsSetUp()
 		self.readDemandedProductsCSV(prodListURL)
@@ -49,7 +59,12 @@ class World():
 
 
 	def componentsSetUp(self):	
-		#create the components objects acording to the XML document information
+		"""
+			Param: None
+			Return: None
+			Description: Creates all the available Components and store the objects in the list	availableComp from the class world. Create the components objects acording to the XML document information
+		"""
+
 		compDesc = ET.parse(compDescrURL)
 		rootComp = compDesc.getroot()
 		count = 0
@@ -61,7 +76,11 @@ class World():
 			count += 1
 
 	def productsSetUp(self):
-		#create the products objects acording to the XML document information
+		"""
+			Param: None
+			Return: None
+			Description: Create the available Products objects according to the XML document information and puts the components into the list of compList of the class Product
+		"""
 
 		prodDesc = ET.parse(productDescrURL)
 		compDesc = ET.parse(compDescrURL)
@@ -87,7 +106,11 @@ class World():
 			count += 1
 
 	def readDemandedProductsCSV(self, prodListURL):
-		#create the list of all the Products on the CSV
+		"""
+			Param: prodListURL, the URL of the CSV file
+			Return: None
+			Description: Add the demanded products from the csv to the demandedProd list of the class World.
+		"""
 
 		with open(prodListURL) as csvFile:
 			reader = csv.reader(csvFile)
@@ -97,6 +120,11 @@ class World():
 			#self.demandedProd = self.demandedProd.astype(int)
 
 	def setComponentsList(self):
+		"""
+			Param: None
+			Return: None
+			Description: According to the list demandedProd it adds the Components to the componentsList of the class World
+		"""
 		#create the list of all the Components needed to create the Products
 		for prodID in self.demandedProd:
 			self.productsList = np.insert(self.productsList, len(self.productsList), self.availableProd[prodID-1])
@@ -105,6 +133,11 @@ class World():
 
 
 	def setWorldObjects(self):
+		"""
+			Param: None
+			Return: None
+			Description: Puts the position of the different object in the map according to the XML file. The first one is the WareHouse and the 3 last the middle points of the walls.
+		"""
 		#Create the list of positions of all the objects that are in the map such as warehouse or walls gaps
 		objDesc = ET.parse(objectsDescrURL)
 		objRoot = objDesc.getroot()

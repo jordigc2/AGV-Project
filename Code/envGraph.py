@@ -193,3 +193,6 @@ path = graph.calculatePath()
 
 print("time:", time.time()-t0)
 
+for node in path:
+	print(node)
+
