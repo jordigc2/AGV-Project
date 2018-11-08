@@ -11,7 +11,8 @@ from operator import attrgetter
 class Node:
 	def __init__(self,x, y, _id, component = -1):
 		"""
-			Param: x, y position of the element, _id of the element, from 0-3 objects in the world and from 4-9 components and component is the Component object
+			Param: x, y position of the element, _id of the element, from 0-3 objects in the world 
+			and from 4-9 components and component is the Component object
 			Return: None
 			Description: Initializes a node according to the object that represents.
 		"""
@@ -29,13 +30,21 @@ class Node:
 		"""
 		 Param: Object Node other
 		 Return: bool
-		 Description: Used to have a list of Nodes sorted by the dijkstraDistance attribute using the library bisect
+		 Description: Used to have a list of Nodes sorted by the dijkstraDistance attribute using 
+		 the library bisect
 		"""
 		return(self.dijkstraDistance < other.dijkstraDistance)
 
 
 class Graph:
 	def __init__(self):
+		"""
+		Param: None
+		Return: None
+		Description: Initialize the mapping of the real map into a graph. First the world objects
+		are inserted to the graph and then the nodes corresponding to the 6 components.
+		"""
+
 		self.listOfNodes = [] #0  WH, 1-3 wallnodes and 4-9 components nodes
 
 		self.world = wd.World()
@@ -54,6 +63,12 @@ class Graph:
 		self.setNeighbours()
 
 	def setNeighbours(self):
+		"""
+			Param: None
+			Return: None
+			Description: Set the nodes neighbour in order to be able to move around the graph. The 
+			neighbours is a list of nodes.
+		"""
 
 		count = 0
 		for node in self.listOfNodes:
@@ -74,9 +89,15 @@ class Graph:
 				for aux in self.listOfNodes[self.world.numObjects:len(self.listOfNodes)]:
 					node.neigh.append(aux)
 			count += 1
-		print([self.listOfNodes[0].neigh[0].x,self.listOfNodes[0].neigh[0].y])
 
 	def calculateDijkstraDistances(self, startingNodeID, initDistance):
+		"""
+			Param: startingNodeID, this node will have dijkstraDistance = 0; initDistance is to know
+			how far is the robot from the starting node.
+			Return: None
+			Description: Run over all the nodes of the graph using a priority queue in order to go 
+			faster and calculate the shortest distance from the starting node.
+		"""
 
 		startNode = self.listOfNodes[startingNodeID]
 		startNode.dijkstraDistance = initDistance
@@ -96,6 +117,13 @@ class Graph:
 				actualNode.visited = True
 
 	def sortCompDist(self, product):
+		"""
+			Param: product, to be able to get the list of components needed.
+			Return: compNodes, is a list of sorted nodes corresponing to a component.
+			Description: Using the bisect libary, a list of nodes is created but the nodes are
+			placed sorted inside the list.
+		"""
+
 		compNodes = []
 		sortedCompList = [0]*len(product.compList)
 		for comp in product.compList:
@@ -105,6 +133,12 @@ class Graph:
 		return compNodes
 
 	def gotToWH(self, node, direction):
+		"""
+			Param: node, is the actual node that the robot is and direction, to know if the path 
+			goes from the WH to the node or the other way around.
+			Return: subPath
+			Description: Generates a subPath to be able to go or return from a node from the WH.
+		"""
 		subPath = np.array([node])
 		while node.prevNeigh != 0:#insert to the subPath until reaching to the WH
 			node = node.prevNeigh
@@ -115,6 +149,13 @@ class Graph:
 		return subPath
 
 	def getClosestComp(self, nodeList, actNode):
+		"""
+			Param: nodeList, components of a product and actNode, to know where the robot is at each
+			moment.
+			Return: Node
+			Description: It gives the node of the closes component from another component Node that 
+			has not been collected yet.
+		"""
 		minDis = sys.maxsize
 		closestComp = 0
 		for aux in nodeList:
@@ -127,6 +168,16 @@ class Graph:
 
 
 	def generatePath(self, product, compTaken, actNode):
+		"""
+			Param: product, used to get the components needed, compTaken, how many components is 
+			planned to have the robot at each moment, actNode, to know the path to the next object.
+			Return: subPath and compTaken
+			Description: It creates the path needed to get all the components of a product. It is 
+			checked how many comp is planned to have the robot at each moment. Because, after 
+			getting all the components of a product, there might be an empty gap, which will be 
+			used with one of the component of the following component.
+		"""
+
 		nodesComp = self.sortCompDist(product)
 		"""print("Components Sorted")
 		for node in nodesComp:
@@ -171,8 +222,14 @@ class Graph:
 
 		return path,compTaken
 
-	#Calculate all the steps to do for all the components needed.
 	def calculatePath(self, processItems = 5):
+		"""
+			Param: processItems, used when the following products are taken into consideration.
+			Return: path, path at time zero.
+			Description: It goes trough all the products and it generates the path of how to reach 
+			to evry single component in order to get the products assembled.
+		"""
+
 		path = np.array([], dtype="object") #numpy array of nodes
 		optimalDistance = sys.maxsize
 		currentDistance = 0
@@ -203,6 +260,6 @@ path = graph.calculatePath()
 
 print("time:", time.time()-t0)
 
-for node in path:
-	print(node)
+"""for node in path:
+	print(node)"""
 
