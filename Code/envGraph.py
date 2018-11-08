@@ -4,6 +4,7 @@ import math
 import time
 import bisect
 import numpy as np
+import random
 from operator import attrgetter
 
 
@@ -222,9 +223,10 @@ class Graph:
 
 		return path,compTaken
 
-	def calculatePath(self, processItems = 5):
+	def calculatePath(self, alarm = False, processItems = 5):
 		"""
-			Param: processItems, used when the following products are taken into consideration.
+			Param: processItems, used when the following products are taken into consideration, to
+			know if there is any alarm or not.
 			Return: path, path at time zero.
 			Description: It goes trough all the products and it generates the path of how to reach 
 			to evry single component in order to get the products assembled.
@@ -236,7 +238,9 @@ class Graph:
 		compTaken = 0
 		actNode = self.listOfNodes[1]
 		for product in self.world.productsList:
-			product.uncollectComp()
+			if not alarm:
+				product.uncollectComp()
+			alarm = False
 
 			if(len(path)>0):
 				actNode = path[len(path)-1]
@@ -249,6 +253,62 @@ class Graph:
 			path = np.insert(path,len(path), self.gotToWH(lastComp,1)) 
 		return path
 
+	def getAGVPos(self):
+		"""
+			Param: None
+			Return: Position X,Y
+			Description: Now it returns random values inside the map coordenates, but in a future,
+			will return the topic position published by VICON.
+		"""
+		return [random.randint(10,235),random.randint(62,207)]
+
+	def alarmActivated(self):
+		"""
+			Param: None
+			Return: updatedPath
+			Description: This function runs when a product is defected and updates the path in order
+			to get the components to redo the product. This function will read from the ROS topics 
+			of the components in the warehous, the components in the robot and the position of the
+			robot.
+		"""
+		robotPos = self.getAGVPos()
+		prodDefect = self.world.prevProdDone
+		comList = prodDefect.compList
+		prodDefect.uncollectComp()
+		count = 0
+		if sum(world.compRobot) == 0: 
+			#robot has no components
+			for comp in comList:
+				if world.compWareHouse[comp.compID] > 0:
+					comp.collected = True
+
+			self.world.productsList = np.insert(self.world.productsList, 0, prodDefect)
+			path = calculatePath(alarm=True)
+		else:
+			if robotPos[1] <= 164: #robot in sector1
+				for comp in comList:
+					if comp.compID in world.compRobot or world.compWareHouse[comp.compID] > 0:
+						comp.collected = True
+				self.world.productsList = np.insert(self.world.productsList, 0, prodDefect)
+				path = calculatePath(alarm=True)
+			else:
+				compRobNeed = 0
+				indxSame = -1
+				for comp in comList:
+					if comp.compID in world.compRobot:
+						aux = world.compRobot.index(comp.compID)
+						if aux != indxSame:
+							comp.collected = True
+							indxSame = aux
+							compRobNeed += 1
+					elif world.compWareHouse[comp.compID] > 0:
+						comp.collected = True
+
+				if compRobNeed == 2:
+					self.world.productsList = np.insert(self.world.productsList, 0, prodDefect)
+					path = calculatePath(alarm=True)
+				else: #leave the components not needed and pick the ones needed
+					pass
 
 
 
@@ -257,6 +317,8 @@ graph = Graph()
 
 graph.calculateDijkstraDistances(0,0)
 path = graph.calculatePath()
+
+graph.alarmActivated()
 
 print("time:", time.time()-t0)
 
