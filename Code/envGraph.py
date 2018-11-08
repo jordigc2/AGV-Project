@@ -10,6 +10,11 @@ from operator import attrgetter
 
 class Node:
 	def __init__(self,x, y, _id, component = -1):
+		"""
+			Param: x, y position of the element, _id of the element, from 0-3 objects in the world and from 4-9 components and component is the Component object
+			Return: None
+			Description: Initializes a node according to the object that represents.
+		"""
 		self.x = x
 		self.y = y
 		self.id = _id
@@ -21,6 +26,11 @@ class Node:
 
 	#used when inserting nodes to a list, to have the list sorted by distance
 	def __lt__(self, other):
+		"""
+		 Param: Object Node other
+		 Return: bool
+		 Description: Used to have a list of Nodes sorted by the dijkstraDistance attribute using the library bisect
+		"""
 		return(self.dijkstraDistance < other.dijkstraDistance)
 
 
