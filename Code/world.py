@@ -2,6 +2,7 @@
 import xml.etree.ElementTree as ET
 import numpy as np
 import csv
+import copy
 
 productDescrURL = "./Products_Composition/ProductsDescription.xml"
 compDescrURL = "./Products_Composition/ComponentsDescription.xml"
@@ -13,15 +14,19 @@ dicCompPos = {}
 
 class Component():
 	def __init__(self, _id, pos):
-		self.compID = _id
+		self.compID = _id #starting at 1
 		self.comPos = pos
 		self.collected = False
 		self.prodID = -1 #usful to make sure that all the components of the same product are together
+		self.returnComp = False
 
 class Product():
 	def __init__(self, _id):
 		self.prodID = _id
 		self.compList = []
+		self.compIDList = []
+		self.inProgress = False #set to True when the robot is picking the components
+		self.numCompTaken = 0
 
 	def setComponents(self, compList):
 		self.compList = compList
@@ -50,6 +55,8 @@ class World():
 
 		self.compWareHouse = [0]*6 #In each position it can bee up to 3 components
 		self.compRobot = [0]*2 #Each position is the ID of a component node in the graph
+		self.compAvRobot = [0]*2#if 1 component is available, if 0 component not available(Alarm2)
+		self.compRetRobot = [0]*2#if 1 component is returned, if 0 nothing(Alarm3)
 		self.prevProdDone = -1 #ID of a product to know wich products are the ones needed again
 
 		self.componentsSetUp()
@@ -99,8 +106,9 @@ class World():
 			product = Product(prodID)
 			for comp in prod:
 				compID = int(comp.text)-1
-				comp = self.availableComp[compID]
-				comp.prodID = count
+				comp = copy.copy(self.availableComp[compID])
+				comp.prodID = prodID
+				product.compIDList.append(compID+1)
 				if comArr.size == 0:
 					comArr = np.array([comp])
 				else:
@@ -113,13 +121,12 @@ class World():
 		"""
 			Param: prodListURL, the URL of the CSV file
 			Return: None
-			Description: Add the demanded products from the csv to the demandedProd list of the 
+			Description: Add the demanded productsID from the csv to the demandedProd list of the 
 			class World.
 		"""
 
 		with open(prodListURL) as csvFile:
 			reader = csv.reader(csvFile)
-			next(reader)
 			for prodId in reader:
 				self.demandedProd = np.insert(self.demandedProd, len(self.demandedProd), prodId[0])
 			#self.demandedProd = self.demandedProd.astype(int)
@@ -128,13 +135,23 @@ class World():
 		"""
 			Param: None
 			Return: None
-			Description: According to the list demandedProd it adds the Components to the 
-			componentsList of the class World
+			Description: According to the list demandedProd it adds the Components and the Products
+			to the productsList and	componentsList of the class World.
 		"""
 		for prodID in self.demandedProd:
-			self.productsList = np.insert(self.productsList, len(self.productsList), 
-															 self.availableProd[prodID-1])
-			prodCompList = self.availableProd[prodID-1].compList
+			#print("prodID", prodID)
+			product = copy.copy(self.availableProd[prodID-1])
+			count = 0
+			aux = []
+			for comp in product.compList:
+				aux.append(copy.copy(comp))
+				count += 1
+			product.compList = aux
+
+			self.productsList = np.insert(self.productsList, len(self.productsList), product)
+
+			prodCompList = product.compList
+
 			self.componentsList = np.insert(self.componentsList, len(self.componentsList), 
 																			prodCompList)
 
