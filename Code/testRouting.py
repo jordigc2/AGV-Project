@@ -1,7 +1,6 @@
 import envGraph as eg
 import time
 import numpy as np
-import msvcrt as m
 
 TIME_OBJECT = 2
 TIME_COMPONENT = 5
@@ -49,10 +48,9 @@ while len(path) > 0:
 			#timePassed = 0
 			prodAssembled = True
 		if timePassed >= TIME_QC and prodAssembled:
-			print("press 'O' for OK or 'W' for defect product:")
-			qc = m.getch()
+			qc = input("press 1 for OK or 0 for defect product and 'ENTER':\n")
 			timeAssembly = 0
-			if chr(qc[0]) == 'w':
+			if qc == 0:
 				qcResult = False
 			else:
 				qcResult = True
