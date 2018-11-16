@@ -29,6 +29,13 @@
             <size>.11 .1 .05</size>
           </box>
         </geometry>
+        <material>
+            <lighting>1</lighting>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Orange</name>
+            </script>
+          </material>
       </visual>
 
       <collision name='caster_collision'>
@@ -90,6 +97,13 @@
             <length>.01</length>
           </cylinder>
         </geometry>
+        <material>
+            <lighting>1</lighting>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Orange</name>
+            </script>
+          </material>
       </visual>
     </link>
     <link name="right_wheel">
@@ -120,6 +134,13 @@
             <length>.01</length>
           </cylinder>
         </geometry>
+        <material>
+            <lighting>1</lighting>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Orange</name>
+            </script>
+          </material>
       </visual>
     </link>
     <joint type="revolute" name="left_wheel_joint">
@@ -153,6 +174,7 @@
     <odometryFrame>odom</odometryFrame>
     <robotBaseFrame>base_footprint</robotBaseFrame>
     </plugin>
+
 
   </model>
 </sdf>
