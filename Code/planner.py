@@ -180,7 +180,7 @@ for i in range(len(goal_array)):
 
 	while ((distFromGoal >= dist_epsilon and it < it_limit) or (distFromGoal < dist_epsilon and abs(robot.vel.lin) > vel_epsilon and it < it_limit)):
 		stopTime = robot.get_minStopTime()
-		#cmd = select_next_cmd(robot, 19, 1)
+		#cmd = select_next_cmd(robot, 19, 1) #Other planner
 		cmd = simple_cmd(robot, goal)
 		robot.move(cmd, timeInterval)
 		distFromGoal = calc_dist2Goal(robot, goal)
@@ -192,6 +192,7 @@ for i in range(len(goal_array)):
 		cmd_map.append(cmd.lin)
 		pos_x_map.append(robot.pos.x)
 		pos_y_map.append(robot.pos.y)
+
 		it += 1
 	print((distFromGoal >= dist_epsilon and it < it_limit), (distFromGoal < dist_epsilon and robot.vel.lin > vel_epsilon and it < it_limit))
 	print("Distance from goal %.2f, robot speed = %.2f, robot angular velocity = %.2f, robot ori: %.2f" % (distFromGoal,robot.vel.lin,robot.vel.ang, robot.ori.theta))
@@ -221,127 +222,3 @@ bx.set(xlabel='x', ylabel='y',
 	   title='Path')
 bx.grid()   
 plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-### Code graveyard ###
-
-# elif robot_vel<=robot.lim.v:
-# 		if robot.lim.v-robot_vel > robot.lim.a / timeInterval:
-# 			cmd.vel = robot_vel + math.copysign(robot.lim.a, next_pos(robot)) / timeInterval
-# 		else:
-# 			cmd.vel = math.copysign(robot.lim.v, cmd.vel)
-
-# def next_pos(robot):
-# 	lowest_dist = 100000
-# 	i = 0
-# 	for i in range(-1, 2, 2):
-# 		rob_next = robot_instance()
-# 		rob_next.pos.x += (robot.vel.lin + i * robot.lim.a / timeInterval) * math.cos(robot.ori.theta) / timeInterval
-# 		rob_next.pos.y += (robot.vel.lin + i * robot.lim.a / timeInterval) * math.sin(robot.ori.theta) / timeInterval
-# 		next_dist = calc_dist2Goal(rob_next, goal)
-# 		if next_dist < lowest_dist:
-# 			lowest_dist = next_dist
-# 			best_operator = i
-# 	return best_operator
-
-# if robot.ori.theta - goalAngle > robot.lim.w / timeInterval:
-# 	cmd.ang += math.copysign(robot.lim.w_dot/timeInterval, goalAngle)
-# else:
-# 	cmd.ang -= goalAngle
-
-## If turn > 90 then reverse direction
-#	if abs(goalAngle)>math.pi/2:
-#		robot.ori.theta = wrap2Pi(robot.ori.theta + math.pi)
-#		goalAngle = calc_angle(robot,goal)
-
-# def select_vel(robot, resolution, timeLookahead):
-# 	lowest_dist = 100000
-# 	if timeInterval/timeLookahead>100:
-# 		print("WARNING! Planner lookahead - timeInterval Ratio is too high which may lead to instabilities!")
-# 	if resolution%2 !=1:
-# 		resolution += 1
-# 	if resolution < 3:
-# 		resolution = 3
-# 	for i in range(int((resolution+1)/2-resolution), int(resolution-(resolution-1)/2) ,1):
-# 		rob_next = robot_instance()
-# 		next_vel = robot.vel.lin + i/((resolution-1)/2) * robot.lim.a
-# 		if abs(next_vel) > robot.lim.v:
-# 			next_vel = math.copysign(robot.lim.v, next_vel)
-
-# 		rob_next.pos.x += next_vel * math.cos(robot.ori.theta) * timeLookahead
-# 		rob_next.pos.y += next_vel * math.sin(robot.ori.theta) * timeLookahead
-# 		next_dist = calc_dist2Goal(rob_next, goal)
-# 		if next_dist < lowest_dist:
-# 			lowest_dist = next_dist
-# 			best_vel = next_vel
-# 	#Correct for time
-# 	best_vel = best_vel/timeLookahead
-# 	return best_vel
-
-# def generate_command(robot, goal, timeInterval, dist_epsilon):
-# 	cmd = command(robot.vel.lin, robot.vel.ang)
-# 	tmp_cmd = command(0,0)
-# 	goalAngle = calc_angle(robot,goal)
-
-# 	## Stopping criteria
-# 	stopTime = robot.vel.lin/robot.lim.a
-# 	#stopDistance = 0 if robot.vel.lin == 0 else robot.vel.lin * stopTime / 2
-# 	stopDistance = robot.vel.lin * stopTime / 2
-# 	distFromGoal = calc_dist2Goal(robot,goal)
-# 	stopVel = distFromGoal / stopTime if stopTime != 0 else robot.lim.v
-# 	#For figures
-# 	stopDistance_map.append(stopDistance)
-# 	stopvel_map.append(stopVel)
-
-# 	# ## When close to goal according to stop limits
-# 	# if distFromGoal <= stopDistance + dist_epsilon:
-# 	# 	cmd.vel -= (math.copysign(robot.lim.a, cmd.vel) / timeInterval)
-# 	# else: 
-# 	# 	tmp_cmd = select_next_cmd(robot, 9, 1)
-# 	# 	cmd.vel = tmp_cmd.vel
-# 	# if abs(cmd.vel) > abs(stopVel):
-# 	# 	cmd.vel = math.copysign(stopVel, cmd.vel) 
-# 	# if abs(cmd.vel) > robot.lim.v:
-# 	# 	cmd.vel = math.copysign(robot.lim.v, cmd.vel)
-
-
-# 	# ## Angular velocity
-# 	# if distFromGoal <= stopDistance + dist_epsilon:
-# 	# 	if abs(cmd.ang) > robot.lim.w_dot / timeInterval:
-# 	# 		cmd.ang -= (math.copysign(robot.lim.w_dot, cmd.ang) / timeInterval)
-# 	# 	else:
-# 	# 		cmd.ang -= (math.copysign(cmd.ang, cmd.ang))
-# 	# else: 
-# 	# 	cmd.ang = tmp_cmd.ang
-
-# 	# if abs(cmd.ang) > robot.lim.w:
-# 	# 	cmd.ang = math.copysign(robot.lim.w, cmd.ang)
-# 	return cmd
-
-# def move_robot(robot, command, timeInterval):
-# 	robot.vel.ang = command.ang
-# 	robot.ori.theta += robot.vel.ang / timeInterval
-# 	robot.ori.theta = wrap2Pi(robot.ori.theta)
-# 	robot.vel.lin = command.lin
-# 	robot.pos.x += robot.vel.lin * math.cos(robot.ori.theta) / timeInterval
-# 	robot.pos.y += robot.vel.lin * math.sin(robot.ori.theta) / timeInterval
-# 	return robot
-
-			# Local Dynamic window approach
-			#next_cmd.lin = robot.vel.lin + i/((resolution-1)/2) * robot.lim.a * timeLookahead
-			#next_cmd.ang = robot.vel.ang + j/((resolution-1)/2) * robot.lim.w_dot * timeLookahead
-			#if abs(next_cmd.lin) > robot.lim.v:
-			#	next_cmd.lin = math.copysign(robot.lim.v, next_cmd.lin)
-			#if abs(next_cmd.ang) > robot.lim.w:
-			#	next_cmd.ang = math.copysign(robot.lim.w, next_cmd.ang)
