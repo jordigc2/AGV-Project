@@ -11,7 +11,6 @@ graph = eg.Graph()
 
 
 print("Initializing the world")
-graph.calculateDijkstraDistances(0,0)
 path = graph.calculatePath()
 
 """for node in path:
