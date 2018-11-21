@@ -5,7 +5,7 @@ import copy
 compWareHouse = [0,0,0,0,0,0]
 compRobot = [0,0]
 avComp = [0,0]
-posRobot = [16,127]
+posRobot = [0.16,1.27]
 
 graph = eg.Graph()
 

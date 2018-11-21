@@ -11,7 +11,7 @@ graph = eg.Graph()
 
 
 print("Initializing the world")
-graph.setRobotPosition(16,120)
+graph.setRobotPosition(0.16,1.20)
 path = graph.calculatePath()
 
 print("time initialation:", time.time()-t0)
