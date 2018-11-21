@@ -79,8 +79,8 @@ class World():
 		rootComp = compDesc.getroot()
 		count = 0
 		for comp in rootComp:
-			xVal = int(comp[0].text)
-			yVal = int(comp[1].text)
+			xVal = float(comp[0].text)
+			yVal = float(comp[1].text)
 			component = Component(count+1, np.array([xVal,yVal]))
 			self.availableComp.append(component)
 			count += 1
@@ -167,5 +167,5 @@ class World():
 		objRoot = objDesc.getroot()
 		self.numObjects = len(objRoot)
 		for obj in objRoot:
-			pos = [int(obj[0].text), int(obj[1].text)]
+			pos = [float(obj[0].text), float(obj[1].text)]
 			self.objectsPos.append(pos)
