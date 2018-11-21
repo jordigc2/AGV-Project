@@ -69,6 +69,10 @@ class Graph:
 		self.setNeighbours()
 		self.robotNode.neigh = self.listOfNodes[1:]
 
+	def setRobotPosition(self, x, y):
+		self.robotNode.x = x
+		self.robotNode.y = y
+
 	def setNeighbours(self):
 		"""
 			Param: None
@@ -108,6 +112,8 @@ class Graph:
 		if not alarm:
 			startNode = self.listOfNodes[startingNodeID]
 			startNode.dijkstraDistance = initDistance
+			for node in self.listOfNodes:
+				node.visited = False
 			priorityQueue = [startNode]
 
 			while len(priorityQueue) > 0:
@@ -145,7 +151,7 @@ class Graph:
 
 					actualNode.visited = True
 
-	def sortCompDist(self, product):
+	def sortCompDist(self, product, alarm):
 		"""
 			Param: product, to be able to get the list of components needed.
 			Return: compNodes, is a list of sorted nodes corresponing to a component.
@@ -155,8 +161,12 @@ class Graph:
 
 		compNodes = []
 		sortedCompList = [0]*len(product.compList)
-		for comp in product.compList:
+		for comp in product.compList:				
 			node = copy.copy(self.listOfNodes[comp.compID+self.world.numObjects-1])
+			if not alarm:
+				node.sortDistance = node.dijkstraDistance
+			else:
+				node.sortDistance = node.robotDistance
 			node.component = comp
 			bisect.insort_left(compNodes, node)
 
@@ -183,10 +193,6 @@ class Graph:
 				subPath = np.insert(subPath,0, node)
 			else:#from node to WH
 				subPath = np.insert(subPath,len(subPath), node)
-		if alarm != 0:
-			if subPath[0].id != 10:
-				subPath = np.insert(subPath,0, self.robotNode)
-
 
 		return subPath
 
@@ -220,7 +226,7 @@ class Graph:
 			used with one of the component of the following component.
 		"""
 
-		nodesComp = self.sortCompDist(product)
+		nodesComp = self.sortCompDist(product, alarm)
 		"""print("Components Sorted")
 		for node in nodesComp:
 			print(node.id, node.sortDistance, node.component)"""
@@ -278,7 +284,6 @@ class Graph:
 					else:
 						if self.world.compAvRobot[0]==0:
 							path = np.array([node1], dtype="object")
-							print("nID:", node1.id)
 							actNode = node1
 							compTaken = 0
 						else:
@@ -306,7 +311,6 @@ class Graph:
 						#print("FirstComonent To take:", node.id)
 						node.component.collected = True
 						subPath = self.gotToWH(node, FROM_HOME, alarm)
-						alarm = False
 						if(len(path) > 0):
 							actNode = path[len(path)-1]
 
@@ -320,6 +324,9 @@ class Graph:
 						count2 = 0
 						actNode = node
 						closestNode = self.getClosestComp(nodesComp, actNode)
+						if alarm != 0:
+							alarm = False
+							self.calculateDijkstraDistances(0,0)
 						#if(closestNode != 0):
 						#	print("Closest:",closestNode.id)
 						if closestNode != 0:
@@ -345,6 +352,10 @@ class Graph:
 		compTaken = 0
 		actNode = self.listOfNodes[1]
 		count = 0
+		alarm = 1 
+		self.calculateDijkstraDistances(0, 0, alarm=alarm)
+		self.calculateDijkstraDistances(0, 0)
+
 		for product in self.world.productsList:
 			#print("product:", product.prodID, product.compList)
 			if not alarm:
@@ -387,6 +398,10 @@ class Graph:
 			lastComp = path[len(path)-1]
 			path = np.delete(path,len(path)-1)
 			path = np.insert(path,len(path), self.gotToWH(lastComp,1)) 
+
+		if path[0].id == 10:
+			path = np.delete(path,0)
+
 		return path
 
 	def getAGVPos(self,x,y):
@@ -415,7 +430,6 @@ class Graph:
 		print("Robot is at:", robotPos)
 		self.robotNode.x = robotPos[0]
 		self.robotNode.y = robotPos[1]
-		self.calculateDijkstraDistances(0, 0, alarm=True)
 
 		prodDefect = self.world.prevProdDone
 		print(prodDefect)
@@ -504,8 +518,8 @@ class Graph:
 								node.component.returnComp = False
 
 					path = self.calculatePath(alarm=4)
-		if path[0].id != 10:
-			path = np.insert(path,0,self.robotNode)
+		if path[0].id == 10:
+			path = np.delete(path,0)
 		return path
 
 

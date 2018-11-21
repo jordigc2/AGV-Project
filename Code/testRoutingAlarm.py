@@ -3,9 +3,9 @@ import numpy as numpy
 import copy
 
 compWareHouse = [0,0,0,0,0,0]
-compRobot = [5,3]
-avComp = [1,1]
-posRobot = [170,180]
+compRobot = [0,0]
+avComp = [0,0]
+posRobot = [50,100]
 
 graph = eg.Graph()
 

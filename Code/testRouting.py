@@ -11,7 +11,7 @@ graph = eg.Graph()
 
 
 print("Initializing the world")
-graph.calculateDijkstraDistances(0,0)
+graph.setRobotPosition(50,100)
 path = graph.calculatePath()
 
 print("time initialation:", time.time()-t0)
