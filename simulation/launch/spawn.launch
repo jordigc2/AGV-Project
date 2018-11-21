@@ -1,0 +1,6 @@
+<launch>
+    <param name="robot_description" textfile="$(find simulation)/models/agv_model.sdf" />
+    <include file="$(find simulation)/launch/warehouse.launch"/>
+    <node name="spawn_sdf" pkg="gazebo_ros" type="spawn_model"
+        args="-param robot_description -sdf -x 0 -y 1.2 -z .05  -model AGV" />
+</launch>

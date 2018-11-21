@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package>
+  <name>simulation</name>
+  <version>0.0.0</version>
+  <description>Gazebo simulation package</description>
+  <maintainer email="robocpu@todo.todo">robocpu</maintainer>
+  <license>MIT</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <export>
+  </export>
+</package>
