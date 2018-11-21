@@ -427,9 +427,7 @@ class Graph:
 		robotPos = [x,y]
 		self.world.compRetRobot = [0]*2
 
-		print("Robot is at:", robotPos)
-		self.robotNode.x = robotPos[0]
-		self.robotNode.y = robotPos[1]
+		print("Robot is at:", [self.robotNode.x, self.robotNode.y])
 
 		prodDefect = self.world.prevProdDone
 		print(prodDefect)

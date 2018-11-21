@@ -28,7 +28,7 @@ graph.world.compRobot = compRobot
 graph.world.compAvRobot = avComp
 graph.world.compWareHouse = compWareHouse
 
-path = graph.alarmActivated(posRobot[0], posRobot[1])
+path = graph.alarmActivated()
 
 for node in path[0:20]:
 	if node.component != -1:

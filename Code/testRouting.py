@@ -57,7 +57,9 @@ while len(path) > 0:
 			print("Quality Check result",qcResult)
 	if not qcResult:
 		print("productDefected")
-		path = graph.alarmActivated(actNode.x,actNode.y)
+		graph.robotNode.x = actNode.x
+		graph.robotNode.y = actNode.y
+		path = graph.alarmActivated()
 		#print(path)
 		qcResult = True
 	actNode = path[0]
