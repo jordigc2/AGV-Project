@@ -426,7 +426,7 @@ class Graph:
 		#robotPos = [x,y+10]
 		self.world.compRetRobot = [0]*2
 
-		print("Robot is at:", [self.robotNode.x, self.robotNode.y])
+		print("Robot is at:", [self.robotNode.x,self.robotNode.y])
 
 		prodDefect = self.world.prevProdDone
 		print(prodDefect)
@@ -444,7 +444,7 @@ class Graph:
 			path = self.calculatePath(alarm=1)
 		else:
 			print("Robot has components:", self.world.compRobot)
-			if robotNode.x <= 164: #robot in sector1
+			if robotPos[1] <= 164: #robot in sector1
 				print("Robot in Sector1")
 				for comp in comList:
 					if comp.compID in self.world.compRobot or self.world.compWareHouse[comp.compID-1] > 0:

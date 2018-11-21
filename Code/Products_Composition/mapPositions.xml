@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mapPosition>
 	<object name="warehouse">
-		<x> 1.25 </x>
-		<y> 0.62 </y>
+		<x> 125 </x>
+		<y> 62 </y>
 	</object>
 	<object name="wall">
-		<x> 0.17 </x>
-		<y> 1.64 </y>
+		<x> 17 </x>
+		<y> 164 </y>
 	</object>
 	<object name="wall">
-		<x> 1.25 </x>
-		<y> 1.64 </y>
+		<x> 125 </x>
+		<y> 164 </y>
 	</object>	
 	<object name="wall">
-		<x> 2.33 </x>
-		<y> 1.64 </y>
+		<x> 233 </x>
+		<y> 164 </y>
 	</object>		
 </mapPosition>
