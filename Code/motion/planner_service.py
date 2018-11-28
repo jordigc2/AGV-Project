@@ -3,6 +3,7 @@ import rospy
 from planner_pkg.srv import *
 import math
 import numpy as np
+from planner_pkg.msg import robot as robot_msg
 
 
 class robot_instance:
@@ -114,6 +115,9 @@ def generate_response(target):
 	# Setup
 	# TODO robot position from topic
 	robot = robot_instance()
+	robot.pos.x = robot_state.x_pos
+	robot.pos.y = robot_state.y_pos
+	robot.ori.theta = wrap2Pi(robot_state.eul_pos)
 	goal = point_instance(target.x, target.y)
 	cmd = command(0,0)
 	timeInterval = target.time_res	 # 1 sec division
@@ -149,11 +153,25 @@ def generate_response(target):
 		response.append(ang_velocity_list)
 	return response
 
+def robot_state_sub(msg):
+	robot_state.x_pos = msg.x_pos
+	robot_state.y_pos = msg.y_pos
+	robot_state.eul_pos = msg.eul_pos
+
 def planner_server():
 	rospy.init_node('planner_server')
+	rate = rospy.Rate(1000) # 1000hz
+	rospy.Subscriber('robotPos', robot_msg, robot_state_sub)
 	s = rospy.Service('planner_service', planner_srv, generate_response)
 	print "Planner service is running."
 	rospy.spin()
 
+
 if __name__ == "__main__":
-	planner_server()
+	global robot_state
+	robot_state = robot_msg()
+	try:
+		while not rospy.is_shutdown():
+			planner_server()
+	except rospy.ROSInterruptException:
+		pass
