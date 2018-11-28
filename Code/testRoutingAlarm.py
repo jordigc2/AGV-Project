@@ -11,6 +11,7 @@ graph = eg.Graph()
 
 
 print("Initializing the world")
+graph.setRobotPosition(16,120)
 path = graph.calculatePath()
 
 """for node in path:

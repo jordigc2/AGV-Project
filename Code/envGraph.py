@@ -7,6 +7,7 @@ import numpy as np
 import random
 from operator import attrgetter
 import copy
+import itertools
 
 
 
@@ -68,6 +69,7 @@ class Graph:
 
 		self.setNeighbours()
 		self.robotNode.neigh = self.listOfNodes[1:]
+		self.calculateDijkstraDistances(0,0)
 
 	def setRobotPosition(self, x, y):
 		self.robotNode.x = x
@@ -326,7 +328,6 @@ class Graph:
 						closestNode = self.getClosestComp(nodesComp, actNode)
 						if alarm != 0:
 							alarm = False
-							self.calculateDijkstraDistances(0,0)
 						#if(closestNode != 0):
 						#	print("Closest:",closestNode.id)
 						if closestNode != 0:
@@ -354,7 +355,6 @@ class Graph:
 		count = 0
 		alarm = 1 
 		self.calculateDijkstraDistances(0, 0, alarm=alarm)
-		self.calculateDijkstraDistances(0, 0)
 
 		for product in self.world.productsList:
 			#print("product:", product.prodID, product.compList)
@@ -403,15 +403,6 @@ class Graph:
 			path = np.delete(path,0)
 
 		return path
-
-	def getAGVPos(self,x,y):
-		"""
-			Param: None
-			Return: Position X,Y
-			Description: Now it returns random values inside the map coordenates, but in a future,
-			will return the topic position published by VICON.
-		"""
-		return [x,y]
 
 	def alarmActivated(self):
 		"""
@@ -521,17 +512,96 @@ class Graph:
 
 
 	def getOptimalPath(self, products):
-		
+
+		compList1 = []
+		compList2 = []
+		count = 0
+		self.calculateDijkstraDistances(0,0, alarm = True)
+		for prod in products:
+			print "ProdID:", prod.prodID
+			for compID in prod.compIDList:
+				print "compID:", compID
+				if count == 0:
+					compList1.append(self.listOfNodes[compID+self.world.numObjects-1])
+				else:
+					compList2.append(self.listOfNodes[compID+self.world.numObjects-1])
+			count += 1
+
+		permProd1 = list(itertools.permutations(compList1))
+		permProd2 = list(itertools.permutations(compList2))
+		compTaken = 0
+		if sum(self.world.compRobot) == 0: 
+			#robot has no components
+			i = 0
+			optDistance = sys.maxsize
+			optPerm = [0,0]
+			for perm1 in permProd1:
+				j = 0
+				dist1 = 0
+				count = 0
+				prevNode = 0
+				numTrips = 0
+				actualWHstate = copy.copy(self.world.compWareHouse)
+				for node in perm1:
+					if actualWHstate[node.component.compID-1] == 3 and numTrips == 0:
+						dist1 = sys.maxsize
+					else:
+						actualWHstate[node.component.compID-1] += 1
+						if count%2==0: #go from robot position or from wh
+							if count == 0:
+								dist1 += node.robotDistance
+							else:
+								dist1 += node.dijkstraDistance
+						else:
+							dist1 += math.sqrt((prevNode.x-node.x)**2+(prevNode.y-node.y)**2)
+							numTrips += 1
+					count += 1
+
+					prevNode = node
+
+				if len(perm1)%2==0:
+					compTaken = 0
+				else:
+					comTaken = 1
+				prevCompTaken = compTaken
+				if dist1 < optDistance:
+					for perm2 in permProd2:
+						dist2 = 0
+						compTaken = prevCompTaken
+						for node in perm2:
+							if compTaken == 0:
+								dist2 += node.dijkstraDistance
+								compTaken += 1
+							else:
+								dist2 += math.sqrt((prevNode.x-node.x)**2+(prevNode.y-node.y)**2)
+								compTaken = 0
+
+							prevNode = node
+						totalDistance = dist1+dist2
+						if totalDistance < optDistance:
+							optDistance = totalDistance
+							optPerm = [i,j]
+							print "optPerm:", optPerm, " distance:", optDistance
+						j += 1
+				i += 1
+			for node in permProd1[optPerm[0]]:
+				print node.component.compID
+		else:
+			#robot has one component
+			compTaken = 1
 
 
 
-"""t0 = time.time()
+t0 = time.time()
 graph = Graph()
 
-graph.calculateDijkstraDistances(0,0)
-path = graph.calculatePath()
+graph.setRobotPosition(16,120)
+graph.world.compWareHouse = [0,0,0,0,0,0]
+graph.getOptimalPath([graph.world.availableProd[0], graph.world.availableProd[1]])
 
-agvPos = graph.getAGVPos()
+#path = graph.calculatePath()
+
+"""agvPos = graph.getAGVPos()
 print("agvPos:",agvPos)
 graph.robotNode.x = agvPos[0]
 graph.robotNode.y = agvPos[1]
