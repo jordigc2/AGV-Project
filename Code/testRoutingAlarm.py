@@ -5,7 +5,7 @@ import copy
 compWareHouse = [0,0,0,0,0,0]
 compRobot = [0,0]
 avComp = [0,0]
-posRobot = [16,127]
+posRobot = [150,190]
 
 graph = eg.Graph()
 
@@ -29,7 +29,7 @@ graph.world.compRobot = compRobot
 graph.world.compAvRobot = avComp
 graph.world.compWareHouse = compWareHouse
 
-path = graph.alarmActivated()
+path = graph.alarmActivated(mode = 1)
 
 for node in path[0:20]:
 	if node.component != -1:

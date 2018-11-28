@@ -266,38 +266,18 @@ class Graph:
 					if node2 != 0:
 						#May need a second look in a future
 						if node1.robotDistance <= node2.robotDistance:
-							if sum(self.world.compAvRobot[0]) >0:
-								path = np.array([node1], dtype="object")
-								actNode = node1
-								compTaken = 1
-							else:
-								path = np.array([node1, node2], dtype="object")
-								actNode = node2
-								compTaken = 0
-						else:
-							if sum(self.world.compAvRobot[0]) >0:
-								path = np.array([node2], dtype="object")
-								actNode = node2
-								compTaken = 1
-							else:
-								path = np.array([node2, node1], dtype="object")
-								actNode = node1
-								compTaken = 0
-					else:
-						if self.world.compAvRobot[0]==0:
 							path = np.array([node1], dtype="object")
 							actNode = node1
-							compTaken = 0
-						else:
-							self.world.compAvRobot[0] = 0
 							compTaken = 1
+						else:
+							path = np.array([node2], dtype="object")
+							actNode = node2
+							compTaken = 1
+					else:
+						self.world.compAvRobot[0] = 0
+						compTaken = 1
+						actNode = self.robotNode
 
-						closestNode = self.getClosestComp(nodesComp, actNode)
-						if closestNode != 0:# if zero, there are no left components to take of the product
-							path = np.insert(path,len(path),closestNode)
-							closestNode.component.collected = True
-							compTaken += 1
-						actNode = closestNode
 				alarm = False
 				if compTaken == 1:
 					closestNode = self.getClosestComp(nodesComp, actNode)
@@ -338,10 +318,10 @@ class Graph:
 
 		return path,compTaken
 
-	def calculatePath(self, alarm = False, processItems = 5):
+	def calculatePath(self, alarm = False, product = -1):
 		"""
-			Param: processItems, used when the following products are taken into consideration, to
-			know if there is any alarm or not.
+			Param: product, to calculate the path of  single product if is different to -1. alarm, 
+			to know if there is any alarm or not.
 			Return: path, path at time zero.
 			Description: It goes trough all the products and it generates the path of how to reach 
 			to evry single component in order to get the products assembled.
@@ -353,10 +333,14 @@ class Graph:
 		compTaken = 0
 		actNode = self.listOfNodes[1]
 		count = 0
-		alarm = 1 
-		self.calculateDijkstraDistances(0, 0, alarm=alarm)
+		al = 1 
+		self.calculateDijkstraDistances(0, 0, alarm=al)
+		if product == -1:
+			listOfProducts  = self.world.productsList
+		else:
+			listOfProducts = [product]
 
-		for product in self.world.productsList:
+		for product in listOfProducts:
 			#print("product:", product.prodID, product.compList)
 			if not alarm:
 				product.uncollectComp()
@@ -394,7 +378,7 @@ class Graph:
 
 			alarm = False
 
-		if(compTaken == 1):
+		if(compTaken == 1 and product == -1):
 			lastComp = path[len(path)-1]
 			path = np.delete(path,len(path)-1)
 			path = np.insert(path,len(path), self.gotToWH(lastComp,1)) 
@@ -404,7 +388,7 @@ class Graph:
 
 		return path
 
-	def alarmActivated(self):
+	def alarmActivated(self, mode = 0):
 		"""
 			Param: None
 			Return: updatedPath
@@ -432,10 +416,13 @@ class Graph:
 					comp.collected = True
 
 			self.world.productsList = np.insert(self.world.productsList, 0, prodDefect)
-			path = self.calculatePath(alarm=1)
+			if mode == 0:
+				path = self.calculatePath(alarm=1)
+			else:
+				path = self.calculatePath(alarm=1, product=prodDefect)
 		else:
 			print("Robot has components:", self.world.compRobot)
-			if robotPos[1] <= 164: #robot in sector1
+			if self.robotNode.y <= 164: #robot in sector1
 				print("Robot in Sector1")
 				for comp in comList:
 					if comp.compID in self.world.compRobot or self.world.compWareHouse[comp.compID-1] > 0:
@@ -444,7 +431,10 @@ class Graph:
 						if comp.compID in self.world.compRobot:
 							self.world.compAvRobot[self.world.compRobot.index(comp.compID)] -= 1
 				self.world.productsList = np.insert(self.world.productsList, 0, prodDefect)
-				path = self.calculatePath(alarm=2)
+				if mode == 0:
+					path = self.calculatePath(alarm=1)
+				else:
+					path = self.calculatePath(alarm=1, product=prodDefect)
 			else:
 				print("Robot in Sector2")
 				compRobNeed = 0
@@ -465,7 +455,10 @@ class Graph:
 					print("Robot has 2 comp needed")
 					self.world.productsList = np.insert(self.world.productsList, 0, prodDefect)
 					#print(self.world.productsList)
-					path = self.calculatePath(alarm=2)
+					if mode == 0:
+						path = self.calculatePath(alarm=2)
+					else:
+						path = self.calculatePath(alarm=2, product=prodDefect)
 				elif compRobNeed == 1: #the robot has 1 comp not needed to assemble the product.
 					#WORKING*
 					print("Robot has 1 comp needed")
@@ -483,13 +476,16 @@ class Graph:
 								self.world.compRetRobot[0] = compID
 							else:
 								node.component.returnComp = False
-					path = self.calculatePath(alarm=3)
+					if mode == 0:
+						path = self.calculatePath(alarm=3)
+					else:
+						path = self.calculatePath(alarm=3, product=prodDefect)
 				else: #all the comp that has the robot are not needed now
 					print("Robot has 0 comp needed")
 					"""if len(self.world.productsList[0].compList) % 2 == 0 or\
 																	 sum(self.world.compAvRobot)==2:"""
 
-					self.world.compAvRobot = [0,0]
+					#self.world.compAvRobot = [0,0]
 					print("compAv:", self.world.compAvRobot)
 					self.world.productsList = np.insert(self.world.productsList, 0, prodDefect)
 					for compID in self.world.compRobot:
@@ -505,90 +501,146 @@ class Graph:
 							else:
 								node.component.returnComp = False
 
-					path = self.calculatePath(alarm=4)
+					if mode == 0:
+						path = self.calculatePath(alarm=4)
+					else:
+						path = self.calculatePath(alarm=4, product=prodDefect)
 		if path[0].id == 10:
 			path = np.delete(path,0)
 		return path
 
 
 	def getOptimalPath(self, products):
+		"""
+			Param: products. A list of 2 products, the next one and two after.
+			Return: path. To collect all the components of product1
+			Description: Calculate the path to collect a product taking into account the followinf 
+			product in order to minimize the distance
+		"""
 
+		path = np.array([], dtype="object") #numpy array of nodes
 		compList1 = []
 		compList2 = []
 		count = 0
 		self.calculateDijkstraDistances(0,0, alarm = True)
+		compTaken = 0
 		for prod in products:
-			print "ProdID:", prod.prodID
+			prod.uncollectComp()
+			if prod.inProgress:
+				timesAsked = 1
+				for comp in prod.compList:
+					if self.world.compWareHouse[comp.compID-1] > 0:
+						if not comp.compID in self.world.prevProdDone.compIDList:
+							comp.collected = True
+						else:
+							if self.world.compWareHouse[comp.compID-1] > timesAsked:
+								comp.collected = True
+								timesAsked += 1
+				prod.numCompTaken = compTaken
+				prod.inProgress = False
+
+			count = 0
 			for compID in prod.compIDList:
-				print "compID:", compID
-				if count == 0:
-					compList1.append(self.listOfNodes[compID+self.world.numObjects-1])
-				else:
-					compList2.append(self.listOfNodes[compID+self.world.numObjects-1])
+				if not prod.compList[count].collected:
+					if count == 0:
+						compList1.append(self.listOfNodes[compID+self.world.numObjects-1])
+					else:
+						compList2.append(self.listOfNodes[compID+self.world.numObjects-1])
 			count += 1
 
+		compProd1Prem = list(itertools.permutations(products[0].compList))
 		permProd1 = list(itertools.permutations(compList1))
 		permProd2 = list(itertools.permutations(compList2))
-		compTaken = 0
 		if sum(self.world.compRobot) == 0: 
 			#robot has no components
-			i = 0
-			optDistance = sys.maxsize
-			optPerm = [0,0]
-			for perm1 in permProd1:
-				j = 0
-				dist1 = 0
-				count = 0
-				prevNode = 0
-				numTrips = 0
-				actualWHstate = copy.copy(self.world.compWareHouse)
-				for node in perm1:
-					if actualWHstate[node.component.compID-1] == 3 and numTrips == 0:
-						dist1 = sys.maxsize
-					else:
-						actualWHstate[node.component.compID-1] += 1
-						if count%2==0: #go from robot position or from wh
-							if count == 0:
+			compRobotTaken = 0
+		else:
+			compRobotTaken = 1
+
+		i = 0
+		optDistance = sys.maxsize
+		optPerm = [0,0]
+		for perm1 in permProd1:
+			j = 0
+			dist1 = 0
+			count = 0
+			prevNode = 0
+			numTrips = 0
+			actualWHstate = copy.copy(self.world.compWareHouse)
+			for node in perm1:
+				if actualWHstate[node.component.compID-1] == 3 and numTrips == 0:
+					dist1 = sys.maxsize
+				else:
+					actualWHstate[node.component.compID-1] += 1
+					if count%2==0: #go from robot position or from wh
+						if count == 0:
+							if compRobotTaken == 0:
 								dist1 += node.robotDistance
 							else:
-								dist1 += node.dijkstraDistance
+								dist1 += math.sqrt((self.robotNode.x-node.x)**2+\
+									(self.robotNode.y-node.y)**2)
 						else:
-							dist1 += math.sqrt((prevNode.x-node.x)**2+(prevNode.y-node.y)**2)
-							numTrips += 1
-					count += 1
+							dist1 += node.dijkstraDistance
+					else:
+						dist1 += math.sqrt((prevNode.x-node.x)**2+(prevNode.y-node.y)**2)
+						numTrips += 1
+				count += 1
 
-					prevNode = node
+				prevNode = node
 
-				if len(perm1)%2==0:
-					compTaken = 0
-				else:
-					comTaken = 1
-				prevCompTaken = compTaken
-				if dist1 < optDistance:
-					for perm2 in permProd2:
-						dist2 = 0
-						compTaken = prevCompTaken
-						for node in perm2:
-							if compTaken == 0:
-								dist2 += node.dijkstraDistance
-								compTaken += 1
-							else:
-								dist2 += math.sqrt((prevNode.x-node.x)**2+(prevNode.y-node.y)**2)
-								compTaken = 0
+			if len(perm1)%2==0:
+				compTaken = compRobotTaken - 0
+			else:
+				comTaken = 1-compRobotTaken
 
-							prevNode = node
-						totalDistance = dist1+dist2
-						if totalDistance < optDistance:
-							optDistance = totalDistance
-							optPerm = [i,j]
-							print "optPerm:", optPerm, " distance:", optDistance
-						j += 1
-				i += 1
+			prevCompTaken = compTaken
+			if dist1 < optDistance:
+				for perm2 in permProd2:
+					dist2 = 0
+					compTaken = prevCompTaken
+					for node in perm2:
+						if compTaken == 0:
+							dist2 += node.dijkstraDistance
+							compTaken += 1
+						else:
+							dist2 += math.sqrt((prevNode.x-node.x)**2+(prevNode.y-node.y)**2)
+							compTaken = 0
+
+						prevNode = node
+					totalDistance = dist1+dist2
+					if totalDistance < optDistance:
+						optDistance = totalDistance
+						optPerm = [i,j]
+						print "optPerm:", optPerm, " distance:", optDistance
+					j += 1
+			i += 1
+
+		for node in permProd1[optPerm[0]]:
+			print node.id
+		print "____"
+		if compRobotTaken == 0:
+			count = 0
+			compTaken = 0
 			for node in permProd1[optPerm[0]]:
-				print node.component.compID
-		else:
-			#robot has one component
-			compTaken = 1
+				if compTaken == 0:
+					if count == 0:
+						path = np.insert(path,len(path),self.gotToWH(node, 0, 1))
+						path = np.delete(path,0	)
+					else:
+						subPath = self.gotToWH(node, 0)
+						if(len(path) > 0):
+							actNode = path[len(path)-1]
+
+						if(subPath[0].id == actNode.id):
+							subPath = np.delete(subPath,0)
+						path = np.insert(path,len(path),subPath)
+					compTaken = 1
+				else:
+					path = np.insert(path,len(path),self.gotToWH(node, 1))
+					compTaken = 0
+				count += 1
+		for node in path:
+			print node.id
 
 
 
@@ -597,7 +649,7 @@ graph = Graph()
 
 graph.setRobotPosition(16,120)
 graph.world.compWareHouse = [0,0,0,0,0,0]
-graph.getOptimalPath([graph.world.availableProd[0], graph.world.availableProd[1]])
+graph.getOptimalPath([graph.world.availableProd[1], graph.world.availableProd[1]])
 
 #path = graph.calculatePath()
 
