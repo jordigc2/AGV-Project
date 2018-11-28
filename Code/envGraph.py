@@ -520,6 +520,9 @@ class Graph:
 		return path
 
 
+	def getOptimalPath(self, products):
+		
+
 
 
 """t0 = time.time()
