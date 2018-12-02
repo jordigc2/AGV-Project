@@ -12,7 +12,6 @@ import math
 #Don't hate on me for the globals pls
 
 def goal_callback(msg):
-	print("gotta new goal, process ...")
 	goal.x_pos = msg.x_pos
 	goal.y_pos = msg.y_pos
 	goal.eul_pos = msg.eul_pos # 0 if waypoint
@@ -65,6 +64,7 @@ def run_node(pub_list):
 		return
 	if (len(linvel) == 0 or len(angvel) == 0) and new_goal == 1:
 		print("New goal received")
+		print(new_goal)
 		new_goal = 0
 		#rospy.wait_for_service('planner_server')
 		try:
@@ -73,6 +73,8 @@ def run_node(pub_list):
 			linvel = list(response.v)
 			angvel = list(response.omega)
 			start_time = rospy.Time.now()
+			#print("start time: %f"%start_time.to_sec())
+			#print("planner size %i"%(len(linvel)))
 		except rospy.ServiceException, e:
 			print ("Service call failed: %s"%e)
 
@@ -83,10 +85,10 @@ def run_node(pub_list):
 	# Pop if elapsed time > time_resolution
 	now = rospy.Time.now()
 	if not len(linvel) == 0 or not len(angvel) == 0:
-		if now - start_time >= rospy.Duration(1/time_resolution):
-				start_time = start_time + rospy.Duration(1/time_resolution)
-				linvel.pop(0)
-				angvel.pop(0)
+		if now - start_time >= rospy.Duration(1.0/time_resolution):
+			start_time = now
+			linvel.pop(0)
+			angvel.pop(0)
 		# If close to goal stop, else motion
 		if calc_dist2Goal(robot_state, goal) > 0.05 and not len(linvel) == 0 and not len(angvel) == 0:
 			msg.linvel = linvel[0]
@@ -98,17 +100,10 @@ def run_node(pub_list):
 	sim_msg.angular.z = msg.angvel
 	pub_list[1].publish(sim_msg)
 
-	# DEbug
-	#if not msg.linvel == 0:
-		#print(linvel)
-		#print(angvel)
-	#	print("Goal: x=%.2f, y=%.2f"%(goal.x_pos, goal.y_pos))
-	#	print("Distance to goal = %.2f"%(calc_dist2Goal(robot_state, goal)))
-	#	print("Command being sent: lin=%.2f, ang=%.2f"%(sim_msg.linear.x, sim_msg.angular.z))
-	#print("Robot x=%.2f, y=%.2f" %(robot_state.x_pos, robot_state.y_pos))
 
 if __name__ == "__main__":
-	print("Robot guidance is running")
+	print("Robot guidance is running.")
+	print("Waiting for goal positions.")
 	#rospy.sleep(2)
 	global robot_state, goal, new_goal, latched_rob_pos
 	new_goal = 0

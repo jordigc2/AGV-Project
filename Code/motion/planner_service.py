@@ -4,6 +4,8 @@ from planner_pkg.srv import *
 import math
 import numpy as np
 from planner_pkg.msg import robot as robot_msg
+from tf import transformations as tf
+from nav_msgs.msg import Odometry
 
 
 class robot_instance:
@@ -11,7 +13,7 @@ class robot_instance:
 		self.pos = self.position(0,0)
 		self.ori = self.orientation(0)
 		self.vel = self.velocity()
-		self.lim = self.limits(1.0, 1.0, 1.8, 1.0)  #Set these according to robot constraintes
+		self.lim = self.limits(2.5, 3.33, 9.2, 5.71)  #Set these according to robot constraintes
 
 	class position:
 		def __init__(self, a, b):
@@ -111,6 +113,9 @@ def simple_cmd(robot, goal):
 	return cmd
 
 def generate_response(target):
+	if latched_rob_pos == 0:
+		print("Robot position is not yet available.")
+		return
 	print ("Target coordinates: x=%.2f y=%.2f, planning time resolution: %f"%(target.x, target.y, target.time_res))
 	# Setup
 	# TODO robot position from topic
@@ -126,7 +131,7 @@ def generate_response(target):
 	vel_epsilon = 0.01 # m/s
 	distFromGoal = calc_dist2Goal(robot, goal)
 	it = 1
-	it_limit = int(1/timeInterval * distFromGoal * 15) #Might need to be changed
+	it_limit = int(1/timeInterval * distFromGoal * 100) #Might need to be changed
 	# Return arrays
 	response = list()
 	lin_velocity_list = []
@@ -145,31 +150,44 @@ def generate_response(target):
 	print("Number of iterations: %i, iteration limit: %i" % (it, it_limit))
 	if it == it_limit:
 		print("Iteration limit reached, empty response")
-		response.append(lin_velocity_list)
-		response.append(ang_velocity_list)
 	else:
 		print("Returning")
 		response.append(lin_velocity_list)
 		response.append(ang_velocity_list)
 	return response
 
-def robot_state_sub(msg):
+def robot_state_callback(msg):
 	robot_state.x_pos = msg.x_pos
 	robot_state.y_pos = msg.y_pos
 	robot_state.eul_pos = msg.eul_pos
+	global latched_rob_pos
+	if latched_rob_pos == 0: 
+		latched_rob_pos = 1
+
+def robot_state_callback_odom(data):
+	eul = tf.euler_from_quaternion([data.pose.pose.orientation.x, data.pose.pose.orientation.y, 
+					data.pose.pose.orientation.z, data.pose.pose.orientation.w])
+	robot_state.x_pos = data.pose.pose.position.x
+	robot_state.y_pos = data.pose.pose.position.y
+	robot_state.eul_pos = eul[2]
+	global latched_rob_pos
+	if latched_rob_pos == 0: 
+		latched_rob_pos = 1
 
 def planner_server():
 	rospy.init_node('planner_server')
 	rate = rospy.Rate(1000) # 1000hz
-	rospy.Subscriber('robotPos', robot_msg, robot_state_sub)
+	rospy.Subscriber('/robotPos', robot_msg, robot_state_callback)
+	rospy.Subscriber('/odom',Odometry, robot_state_callback_odom)
 	s = rospy.Service('planner_service', planner_srv, generate_response)
-	print "Planner service is running."
+	print("Planner service is running.")
 	rospy.spin()
 
 
 if __name__ == "__main__":
-	global robot_state
+	global robot_state, latched_rob_pos
 	robot_state = robot_msg()
+	latched_rob_pos = 0
 	try:
 		while not rospy.is_shutdown():
 			planner_server()
