@@ -103,6 +103,36 @@ class Graph:
 					node.neigh.append(aux)
 			count += 1
 
+	def dijkstraDistancesNoQueue(self,startingNodeID, alarm=False):
+		for node in self.listOfNodes:
+			node.dijkstraDistance = sys.maxsize
+			node.visited = False
+			node.robotDistance = sys.maxsize
+
+		actNode = self.listOfNodes[startingNodeID]
+		numNodes = len(self.listOfNodes)
+		completed = False
+		if not alarm:
+			actNode.dijkstraDistance = 0
+			actNode.visited = True
+			while not completed:
+				for node in actNode.neigh:
+					if not node.visited:
+						dist = actNode.dijkstraDistance + math.sqrt((node.x-actNode.x)**2+(node.y-actNode.y)**2)
+						if dist < node.dijkstraDistance:
+							node.dijkstraDistance = dist
+							node.prevNeigh = actNode
+				minDist = sys.maxsize
+				for auxnodes in self.listOfNodes:
+					if auxnodes.dijkstraDistance < minDist and not auxnodes.visited:
+						actNode = auxnodes
+						minDist = auxnodes.dijkstraDistance
+				actNode.visited = True
+				numNodes -= 1
+
+				if numNodes == 0:
+					completed = True
+
 	def calculateDijkstraDistances(self, startingNodeID, initDistance, alarm = False):
 		"""
 			Param: startingNodeID, this node will have dijkstraDistance = 0; initDistance is to know
@@ -116,6 +146,7 @@ class Graph:
 			startNode.dijkstraDistance = initDistance
 			for node in self.listOfNodes:
 				node.visited = False
+				node.dijkstraDistance = sys.maxsize
 			priorityQueue = [startNode]
 
 			while len(priorityQueue) > 0:
@@ -137,6 +168,7 @@ class Graph:
 			priorityQueue = [startNode]
 			for node in self.listOfNodes:
 				node.visited = False
+				node.robotDistance = sys.maxsize	
 
 			while len(priorityQueue) > 0:
 				actualNode = priorityQueue.pop(0)
@@ -647,6 +679,18 @@ class Graph:
 				count += 1
 		for node in path:
 			print node.id
+
+
+"""
+#Dijkstra TESTS!!!!!
+graph = Graph()
+t0 = time.time()
+graph.dijkstraDistancesNoQueue(0)
+print "time dijkstra no queue", time.time()-t0
+
+t1 = time.time()
+graph.calculateDijkstraDistances(0,0)
+print "time dijkstra queue", time.time()-t1"""
 
 
 
