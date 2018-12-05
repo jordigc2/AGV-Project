@@ -63,7 +63,7 @@ def run_node(pub_list):
 	if latched_rob_pos == 0:
 		return
 	if (len(linvel) == 0 or len(angvel) == 0) and new_goal == 1:
-		print("New goal received")
+		print("New goal received x=%.2f, y=%.2f"%(goal.x_pos, goal.y_pos))
 		print(new_goal)
 		new_goal = 0
 		#rospy.wait_for_service('planner_server')
@@ -85,14 +85,16 @@ def run_node(pub_list):
 	# Pop if elapsed time > time_resolution
 	now = rospy.Time.now()
 	if not len(linvel) == 0 or not len(angvel) == 0:
-		if now - start_time >= rospy.Duration(1.0/time_resolution):
+		if now - start_time >= rospy.Duration(1.0/time_resolution): 
 			start_time = now
 			linvel.pop(0)
 			angvel.pop(0)
 		# If close to goal stop, else motion
-		if calc_dist2Goal(robot_state, goal) > 0.05 and not len(linvel) == 0 and not len(angvel) == 0:
-			msg.linvel = linvel[0]
-			msg.angvel = angvel[0]
+		if calc_dist2Goal(robot_state, goal) > 0.02 and not len(linvel) == 0 and not len(angvel) == 0:
+			msg.linvel = linvel[0] * 0.95 # .95 to reduce overshoot because of simualation update frequency delay
+			msg.angvel = angvel[0] * 0.95
+			if msg.angvel < 0.02:
+				msg.angvel = 0
 	pub_list[0].publish(msg)
 	# Simulation velocity publisher
 	sim_msg = Twist()
