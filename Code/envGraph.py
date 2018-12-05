@@ -403,6 +403,7 @@ class Graph:
 
 		print("Robot is at:", [self.robotNode.x,self.robotNode.y])
 
+		self.world.prevProdDone.numCompTaken = 0
 		prodDefect = self.world.prevProdDone
 		print(prodDefect)
 		comList = prodDefect.compList
@@ -411,9 +412,12 @@ class Graph:
 		if sum(self.world.compRobot) == 0: 
 			#robot has no components
 			print("robot has no components")
+			print "compWH", self.world.compWareHouse
 			for comp in comList:
 				if self.world.compWareHouse[comp.compID-1] > 0:
+					print "already in the WH", comp.compID
 					comp.collected = True
+					prodDefect.numCompTaken += 1
 
 			self.world.productsList = np.insert(self.world.productsList, 0, prodDefect)
 			if mode == 0:
@@ -505,6 +509,8 @@ class Graph:
 						path = self.calculatePath(alarm=4)
 					else:
 						path = self.calculatePath(alarm=4, product=prodDefect)
+
+		print "Components Taken", self.world.productsList[0]
 		if path[0].id == 10:
 			path = np.delete(path,0)
 		return path
@@ -644,12 +650,12 @@ class Graph:
 
 
 
-t0 = time.time()
+"""t0 = time.time()
 graph = Graph()
 
 graph.setRobotPosition(16,120)
 graph.world.compWareHouse = [0,0,0,0,0,0]
-graph.getOptimalPath([graph.world.availableProd[1], graph.world.availableProd[1]])
+graph.getOptimalPath([graph.world.availableProd[1], graph.world.availableProd[1]])"""
 
 #path = graph.calculatePath()
 
