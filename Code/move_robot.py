@@ -1,124 +1,161 @@
 #!/usr/bin/env python
-
 import rospy
-from tf import transformations as tf
-from nav_msgs.msg import Odometry
-from geometry_msgs.msg import Twist
-from planner_pkg.msg import robot as robot_msg
-from planner_pkg.msg import target as target_msg
 from planner_pkg.srv import *
 import math
+import numpy as np
+from planner_pkg.msg import robot as robot_msg
+from planner_pkg.msg import target as target_msg
+from tf import transformations as tf
+import geometry_msgs.msg as gmsgs
+from nav_msgs.msg import Odometry
 
-#Don't hate on me for the globals pls
 
-def goal_callback(msg):
-	goal.x_pos = msg.x_pos
-	goal.y_pos = msg.y_pos
-	goal.eul_pos = msg.eul_pos # 0 if waypoint
-	global new_goal
-	new_goal = 1
+class robot_instance:
+	def __init__(self):
+		self.pos = self.position(0,0)
+		self.ori = self.orientation(0)
+		self.vel = self.velocity()
+		self.lim = self.limits(0.5, 2.0, 7.0, 38.0)#REal tests crude  #Sim gentle. works better(2.0, 2.5, 7.0, 3.5) #Sim(2.5, 3.33, 9.2, 5.71)  #Set these according to robot constraintes
 
-def robot_state_callback_odom(data):
-	eul = tf.euler_from_quaternion([data.pose.pose.orientation.x, data.pose.pose.orientation.y, 
-					data.pose.pose.orientation.z, data.pose.pose.orientation.w])
-	robot_state.x_pos = data.pose.pose.position.x
-	robot_state.y_pos = data.pose.pose.position.y
-	robot_state.eul_pos = eul[2]
-	global latched_rob_pos
-	if latched_rob_pos == 0: 
-		latched_rob_pos = 1
+	class position:
+		def __init__(self, a, b):
+			self.x = a
+			self.y = b
+	class orientation:
+		def __init__(self,a):
+			self.theta = a
+	class velocity:
+		def __init__(self):
+			self.lin = 0
+			self.ang = 0
+	class limits:
+		def __init__(self,a,b,c,d):
+			self.v = a
+			self.a = b
+			self.w = c
+			self.w_dot = d
+	def get_minStopTime(self):
+		return abs(self.vel.lin) / self.lim.a if self.vel.lin != 0 else 1.0
+	def get_minStopDistance(self):
+		return abs(self.vel.lin * self.get_minStopTime() / 2)
+	def get_maxStopVelocity(self):
+		s = abs(self.get_minStopDistance())
+		return s/ math.sqrt(2*s/self.lim.a) if s != 0 else self.lim.v
+	def get_minStopTimeAngle(self):
+		return abs(self.vel.ang) / self.lim.w_dot if self.vel.ang != 0 else 1.0
+	def get_minStopAngle(self):
+		return self.vel.ang * self.get_minStopTimeAngle() / 2
+	def get_maximumAngleVel(self, target_angle):
+		return target_angle / math.sqrt(2*abs(target_angle)/self.lim.w_dot)
 
-def robot_state_callback(msg):
-	robot_state.x_pos = msg.x_pos
-	robot_state.y_pos = msg.y_pos
-	robot_state.eul_pos = msg.eul_pos
-	global latched_rob_pos
-	if latched_rob_pos == 0: 
-		latched_rob_pos = 1
+class point_instance:
+	def __init__(self, x_p, y_p, theta_p):
+		self.x = x_p
+		self.y = y_p
+		self.ori = theta_p
 
-def node_setup():
-	# Change returned 
-	pub_list = []
-	rospy.init_node("robot_guidance")
-	# Physical robot control
-	rospy.Subscriber("/robotPos", robot_msg, robot_state_callback)
-	rospy.Subscriber("/goalPos", robot_msg, goal_callback)
-	vel_pub = rospy.Publisher("/some/topic", target_msg, queue_size=10)
-	# Simulation control
-	rospy.Subscriber('/odom',Odometry, robot_state_callback_odom)
-	sim_vel_pub = rospy.Publisher("/cmd_vel", Twist, queue_size=10)
-	pub_list.extend([vel_pub, sim_vel_pub])
-	return pub_list
+class command():
+	def __init__(self,a,b):
+		self.lin = a
+		self.ang = b
+
+def wrap2Pi(angle):
+	angle = ( angle + np.pi) % (2 * np.pi ) - np.pi
+	return angle
+
+def calc_angle(robot, goal):
+	angle2Goal = math.atan2(goal.y-robot.pos.y, goal.x-robot.pos.x)
+	angle2Goal = wrap2Pi(robot.ori.theta - angle2Goal)
+	return angle2Goal
 
 def calc_dist2Goal(robot, goal):
-	distFromGoal = math.sqrt((goal.x_pos-robot.x_pos)**2 + (goal.y_pos-robot.y_pos)**2)
+	distFromGoal = math.sqrt((goal.x-robot.pos.x)**2 + (goal.y-robot.pos.y)**2)
 	return distFromGoal	
 
-def run_node(pub_list):
-	global linvel, angvel
-	global start_time
-	time_resolution = 100 # 100 Hz
+def simple_cmd(robot, goal):
+	cmd = command(0,0)
+	angle_diff = calc_angle(robot, goal)
+	angle_epsilon = 1.5*math.pi/180
+	reverse = 0 # 1 = normal, 0 = reverse
+	distFromGoal = calc_dist2Goal(robot, goal)
+	dist_epsilon = 0.01
 
-	global new_goal, latched_rob_pos
+	if abs(angle_diff) > math.pi/2:
+		reverse = 1
+		angle_diff = wrap2Pi(angle_diff + math.pi) 
+
+	if abs(angle_diff) < robot.get_minStopAngle():
+		cmd.ang = -robot.get_maximumAngleVel(angle_diff)
+	elif abs(angle_diff) > robot.get_minStopAngle():
+		cmd.ang = -robot.get_maximumAngleVel(angle_diff)
+	
+	if abs(cmd.ang) < angle_epsilon*2:
+		if distFromGoal < robot.get_minStopDistance() + dist_epsilon:
+			cmd.lin = -robot.get_maxStopVelocity()
+		else:
+			cmd.lin = robot.lim.v
+		if reverse == 1:
+			cmd.lin *= -1
+	return cmd
+
+def run_node(pub):
 	if latched_rob_pos == 0:
+		print("Robot position is not yet available.")
 		return
-	if (len(linvel) == 0 or len(angvel) == 0) and new_goal == 1:
-		print("New goal received x=%.2f, y=%.2f"%(goal.x_pos, goal.y_pos))
-		print(new_goal)
-		new_goal = 0
-		#rospy.wait_for_service('planner_server')
-		try:
-			planner_service = rospy.ServiceProxy('planner_service', planner_srv)
-			response = planner_service(goal.x_pos, goal.y_pos, time_resolution)
-			linvel = list(response.v)
-			angvel = list(response.omega)
-			start_time = rospy.Time.now()
-			#print("start time: %f"%start_time.to_sec())
-			#print("planner size %i"%(len(linvel)))
-		except rospy.ServiceException, e:
-			print ("Service call failed: %s"%e)
+	# Setup
+	cmd = command(0,0)
+	dist_epsilon = 0.01 #m
+	vel_epsilon = 0.01 # m/s
+	distFromGoal = calc_dist2Goal(robot, goal)
 
-	# Default message
-	msg = target_msg()
-	msg.linvel = 0
-	msg.angvel = 0
-	# Pop if elapsed time > time_resolution
-	now = rospy.Time.now()
-	if not len(linvel) == 0 or not len(angvel) == 0:
-		if now - start_time >= rospy.Duration(1.0/time_resolution): 
-			start_time = now
-			linvel.pop(0)
-			angvel.pop(0)
-		# If close to goal stop, else motion
-		if calc_dist2Goal(robot_state, goal) > 0.02 and not len(linvel) == 0 and not len(angvel) == 0:
-			msg.linvel = linvel[0] * 0.95 # .95 to reduce overshoot because of simualation update frequency delay
-			msg.angvel = angvel[0] * 0.95
-			if msg.angvel < 0.02:
-				msg.angvel = 0
-	pub_list[0].publish(msg)
-	# Simulation velocity publisher
-	sim_msg = Twist()
-	sim_msg.linear.x = msg.linvel
-	sim_msg.angular.z = msg.angvel
-	pub_list[1].publish(sim_msg)
+	if ((distFromGoal >= dist_epsilon) or (distFromGoal < dist_epsilon and (abs(robot.vel.lin) > vel_epsilon) or abs(robot.vel.ang) > vel_epsilon)):
+		cmd = simple_cmd(robot, goal)
+		print(cmd.lin,cmd.ang)
+		# Hopefully we switch to only using one version of the object
+		cmd_format = target_msg()
+		cmd_format.linvel = cmd.lin
+		cmd_format.angvel = cmd.ang
+		pub.publish(cmd_format)
 
+def robot_state_callback_TS(data):
+	eul = tf.euler_from_quaternion([data.transform.rotation.x, data.transform.rotation.y, 
+					data.transform.rotation.z, data.transform.rotation.w])
+	robot.pos.x = data.transform.translation.x
+	robot.pos.y = data.transform.translation.y
+	robot.ori.theta = eul[2]
+	global latched_rob_pos
+	if latched_rob_pos == 0: 
+		latched_rob_pos = 1
+
+def goal_callback(msg):
+	goal.x = msg.x_pos
+	goal.y = msg.y_pos
+	goal.ori = msg.eul_pos # 0 if waypoint
+
+def robot_velocity_callback(msg):
+	robot.vel.lin = msg.linvel
+	robot.vel.ang = msg.angvel
+
+def node_setup():
+	rospy.init_node('robot_control')
+	rospy.Subscriber('/vicon/AGVgr5/AGVgr5', gmsgs.TransformStamped, robot_state_callback_TS)
+	rospy.Subscriber('/vicon/SomethingIdunnuWhatever/SomethingIdunnuWhatever', gmsgs.TransformStamped, robot_state_callback_TS)
+	rospy.Subscriber("/goalPos", robot_msg, goal_callback)
+	rospy.Subscriber("/arduino/vel", target_msg, robot_velocity_callback)
+	vel_pub = rospy.Publisher("/some/topic", target_msg, queue_size=1)
+	print("Robot control is running.")
+	return vel_pub
 
 if __name__ == "__main__":
-	print("Robot guidance is running.")
-	print("Waiting for goal positions.")
-	#rospy.sleep(2)
-	global robot_state, goal, new_goal, latched_rob_pos
-	new_goal = 0
+	global robot, latched_rob_pos, goal
+	robot = robot_instance()
+	goal = point_instance(0,0,0)
 	latched_rob_pos = 0
-	linvel = []
-	angvel = []
-	robot_state = robot_msg()
-	goal = robot_msg()
 	try:
 		pub = node_setup()
+		rate = rospy.Rate(1000) # 1000hz
 		while not rospy.is_shutdown():
 			run_node(pub)
-			rate = rospy.Rate(1000)
 			rate.sleep()
 	except rospy.ROSInterruptException:
 		pass
