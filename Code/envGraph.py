@@ -147,6 +147,7 @@ class Graph:
 			for node in self.listOfNodes:
 				node.visited = False
 				node.dijkstraDistance = sys.maxsize
+			startNode.dijkstraDistance = 0
 			priorityQueue = [startNode]
 
 			while len(priorityQueue) > 0:
@@ -168,7 +169,8 @@ class Graph:
 			priorityQueue = [startNode]
 			for node in self.listOfNodes:
 				node.visited = False
-				node.robotDistance = sys.maxsize	
+				node.robotDistance = sys.maxsize
+			startNode.dijkstraDistance = 0
 
 			while len(priorityQueue) > 0:
 				actualNode = priorityQueue.pop(0)
@@ -577,18 +579,26 @@ class Graph:
 				prod.numCompTaken = compTaken
 				prod.inProgress = False
 
-			count = 0
+			count2 = 0
 			for compID in prod.compIDList:
-				if not prod.compList[count].collected:
+				if not prod.compList[count2].collected:
 					if count == 0:
 						compList1.append(self.listOfNodes[compID+self.world.numObjects-1])
 					else:
 						compList2.append(self.listOfNodes[compID+self.world.numObjects-1])
+				count2 += 1
 			count += 1
 
-		compProd1Prem = list(itertools.permutations(products[0].compList))
+
+		#compProd1Prem = list(itertools.permutations(products[0].compList))
 		permProd1 = list(itertools.permutations(compList1))
 		permProd2 = list(itertools.permutations(compList2))
+		"""for perm in permProd1:
+			print "______"
+			for node in perm:
+				print node.id"""
+
+
 		if sum(self.world.compRobot) == 0: 
 			#robot has no components
 			compRobotTaken = 0
@@ -623,16 +633,18 @@ class Graph:
 						dist1 += math.sqrt((prevNode.x-node.x)**2+(prevNode.y-node.y)**2)
 						numTrips += 1
 				count += 1
+				#print dist1
 
 				prevNode = node
 
 			if len(perm1)%2==0:
-				compTaken = compRobotTaken - 0
+				compTaken = compRobotTaken
 			else:
 				comTaken = 1-compRobotTaken
 
 			prevCompTaken = compTaken
-			if dist1 < optDistance:
+
+			if dist1 < optDistance and len(compList2)>0:
 				for perm2 in permProd2:
 					dist2 = 0
 					compTaken = prevCompTaken
@@ -646,16 +658,16 @@ class Graph:
 
 						prevNode = node
 					totalDistance = dist1+dist2
-					if totalDistance < optDistance:
+					if totalDistance <= optDistance:
 						optDistance = totalDistance
 						optPerm = [i,j]
-						print "optPerm:", optPerm, " distance:", optDistance
+						#print "optPerm:", optPerm, " distance:", optDistance
 					j += 1
 			i += 1
 
-		for node in permProd1[optPerm[0]]:
+		"""for node in permProd1[optPerm[0]]:
 			print node.id
-		print "____"
+		print "____" """
 		if compRobotTaken == 0:
 			count = 0
 			compTaken = 0
@@ -679,6 +691,9 @@ class Graph:
 				count += 1
 		for node in path:
 			print node.id
+		#print path
+
+		return path
 
 
 """
@@ -699,7 +714,7 @@ graph = Graph()
 
 graph.setRobotPosition(16,120)
 graph.world.compWareHouse = [0,0,0,0,0,0]
-graph.getOptimalPath([graph.world.availableProd[1], graph.world.availableProd[1]])"""
+graph.getOptimalPath([graph.world.productsList[0], graph.world.productsList[1]])"""
 
 #path = graph.calculatePath()
 
