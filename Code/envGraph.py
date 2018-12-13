@@ -147,6 +147,7 @@ class Graph:
 			for node in self.listOfNodes:
 				node.visited = False
 				node.dijkstraDistance = sys.maxsize
+			startNode.dijkstraDistance = 0
 			priorityQueue = [startNode]
 
 			while len(priorityQueue) > 0:
@@ -168,7 +169,8 @@ class Graph:
 			priorityQueue = [startNode]
 			for node in self.listOfNodes:
 				node.visited = False
-				node.robotDistance = sys.maxsize	
+				node.robotDistance = sys.maxsize
+			startNode.dijkstraDistance = 0
 
 			while len(priorityQueue) > 0:
 				actualNode = priorityQueue.pop(0)
@@ -550,7 +552,7 @@ class Graph:
 		return path
 
 
-	def getOptimalPath(self, products):
+	def getOptimalPath(self, path, products):
 		"""
 			Param: products. A list of 2 products, the next one and two after.
 			Return: path. To collect all the components of product1
@@ -558,7 +560,6 @@ class Graph:
 			product in order to minimize the distance
 		"""
 
-		path = np.array([], dtype="object") #numpy array of nodes
 		compList1 = []
 		compList2 = []
 		count = 0
@@ -579,19 +580,27 @@ class Graph:
 				prod.numCompTaken = compTaken
 				prod.inProgress = False
 
-			count = 0
+			count2 = 0
 			for compID in prod.compIDList:
-				if not prod.compList[count].collected:
+				if not prod.compList[count2].collected:
 					if count == 0:
 						compList1.append(self.listOfNodes[compID+self.world.numObjects-1])
 					else:
 						compList2.append(self.listOfNodes[compID+self.world.numObjects-1])
+				count2 += 1
 			count += 1
 
-		compProd1Prem = list(itertools.permutations(products[0].compList))
+
+		#compProd1Prem = list(itertools.permutations(products[0].compList))
 		permProd1 = list(itertools.permutations(compList1))
 		permProd2 = list(itertools.permutations(compList2))
-		if sum(self.world.compRobot) == 0: 
+		"""for perm in permProd1:
+			print "______"
+			for node in perm:
+				print node.id"""
+
+
+		if len(path) == 0 or path[len(path)-1].id == 0: 
 			#robot has no components
 			compRobotTaken = 0
 		else:
@@ -617,24 +626,26 @@ class Graph:
 							if compRobotTaken == 0:
 								dist1 += node.robotDistance
 							else:
-								dist1 += math.sqrt((self.robotNode.x-node.x)**2+\
-									(self.robotNode.y-node.y)**2)
+								dist1 += math.sqrt((path[len(path)-1].x-node.x)**2+\
+									(path[len(path)-1].y-node.y)**2)
 						else:
 							dist1 += node.dijkstraDistance
 					else:
 						dist1 += math.sqrt((prevNode.x-node.x)**2+(prevNode.y-node.y)**2)
 						numTrips += 1
 				count += 1
+				#print dist1
 
 				prevNode = node
 
 			if len(perm1)%2==0:
-				compTaken = compRobotTaken - 0
+				compTaken = compRobotTaken
 			else:
 				comTaken = 1-compRobotTaken
 
 			prevCompTaken = compTaken
-			if dist1 < optDistance:
+
+			if dist1 < optDistance and len(compList2)>0:
 				for perm2 in permProd2:
 					dist2 = 0
 					compTaken = prevCompTaken
@@ -648,39 +659,45 @@ class Graph:
 
 						prevNode = node
 					totalDistance = dist1+dist2
-					if totalDistance < optDistance:
+					if totalDistance <= optDistance:
 						optDistance = totalDistance
 						optPerm = [i,j]
-						print "optPerm:", optPerm, " distance:", optDistance
+						#print "optPerm:", optPerm, " distance:", optDistance
 					j += 1
 			i += 1
 
-		for node in permProd1[optPerm[0]]:
+		"""for node in permProd1[optPerm[0]]:
 			print node.id
-		print "____"
-		if compRobotTaken == 0:
-			count = 0
-			compTaken = 0
-			for node in permProd1[optPerm[0]]:
-				if compTaken == 0:
-					if count == 0:
-						path = np.insert(path,len(path),self.gotToWH(node, 0, 1))
-						path = np.delete(path,0	)
-					else:
-						subPath = self.gotToWH(node, 0)
-						if(len(path) > 0):
-							actNode = path[len(path)-1]
+		print "____" """
 
-						if(subPath[0].id == actNode.id):
-							subPath = np.delete(subPath,0)
-						path = np.insert(path,len(path),subPath)
-					compTaken = 1
+		count = 0
+		if compRobotTaken == 0:
+			compTaken = 0
+		else:
+			compTaken = 1
+		for node in permProd1[optPerm[0]]:
+			if compTaken == 0:
+				if count == 0:
+					path = np.insert(path,len(path),self.gotToWH(node, 0, 1))
+					path = np.delete(path,0	)
 				else:
-					path = np.insert(path,len(path),self.gotToWH(node, 1))
-					compTaken = 0
-				count += 1
-		for node in path:
-			print node.id
+					subPath = self.gotToWH(node, 0)
+					if(len(path) > 0):
+						actNode = path[len(path)-1]
+
+					if(subPath[0].id == actNode.id):
+						subPath = np.delete(subPath,0)
+					path = np.insert(path,len(path),subPath)
+				compTaken = 1
+			else:
+				path = np.insert(path,len(path),self.gotToWH(node, 1))
+				compTaken = 0
+			count += 1
+		"""for node in path:
+			print node.id"""
+		#print path
+
+		return path
 
 
 """
@@ -699,9 +716,10 @@ print "time dijkstra queue", time.time()-t1"""
 """t0 = time.time()
 graph = Graph()
 
-graph.setRobotPosition(16,120)
+graph.setRobotPosition(30,107)
 graph.world.compWareHouse = [0,0,0,0,0,0]
-graph.getOptimalPath([graph.world.availableProd[1], graph.world.availableProd[1]])"""
+path = np.array([], dtype="object") #numpy array of nodes
+graph.getOptimalPath(path, [graph.world.productsList[0], graph.world.productsList[1]])"""
 
 #path = graph.calculatePath()
 
