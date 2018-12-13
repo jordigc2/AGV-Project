@@ -301,10 +301,12 @@ class Graph:
 							path = np.array([node1], dtype="object")
 							actNode = node1
 							compTaken = 1
+							node2.component.returnComp = False
 						else:
 							path = np.array([node2], dtype="object")
 							actNode = node2
 							compTaken = 1
+							node1.component.returnComp = False
 					else:
 						self.world.compAvRobot[0] = 0
 						compTaken = 1
