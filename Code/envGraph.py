@@ -274,7 +274,7 @@ class Graph:
 		
 		while not pathCreated:
 			#print("compTaken:", compTaken, "al:",alarm)
-			if compTaken == 1 or alarm == 3 or alarm == 4:
+			if compTaken == 1 or alarm == 3 or alarm == 4 or alarm == 2:
 				if alarm == 3:
 					actNode = self.robotNode
 					#print("actNode:",actNode.id)
@@ -303,14 +303,27 @@ class Graph:
 							path = np.array([node1], dtype="object")
 							actNode = node1
 							compTaken = 1
+							node2.component.returnComp = False
 						else:
 							path = np.array([node2], dtype="object")
 							actNode = node2
 							compTaken = 1
+							node1.component.returnComp = False
 					else:
-						self.world.compAvRobot[0] = 0
+						#self.world.compAvRobot[0] = 0
 						compTaken = 1
 						actNode = self.robotNode
+				elif alarm == 2:
+					minDist = sys.maxsize
+					closestNode = 0
+					for compID in self.world.compRobot:
+						node = self.listOfNodes[self.world.numObjects+compID-1]
+						dist = math.sqrt((node.x-self.robotNode.x)**2+(node.y-self.robotNode.y)**2)
+						if dist < minDist:
+							closestNode = node
+							minDist = dist
+					path = np.array(self.gotToWH(closestNode,FROM_NODE), dtype="object")
+					path = np.delete(path,0)
 
 				alarm = False
 				if compTaken == 1:
@@ -391,13 +404,16 @@ class Graph:
 					product.numCompTaken = compTaken
 					product.inProgress = False
 			if sum(self.world.compAvRobot)>0:
-				for comp in product.compList:		
-					if comp.compID in self.world.compRobot:
-						indx = self.world.compRobot.index(comp.compID)
-						if self.world.compAvRobot[indx] == 1:
-							comp.collected = True
-							compTaken += 1
-							self.world.compAvRobot[indx] -= 1
+				#print (self.world.compAvRobot, product.prodID)
+				for comp in product.compList:	
+					if not comp.collected:
+						count = 0
+						for cID in self.world.compRobot:
+							if cID == comp.compID and self.world.compAvRobot[count] == 1:
+								comp.collected = True
+								#compTaken += 1
+								self.world.compAvRobot[count] -= 1
+							count += 1
 			count += 1
 
 			if(len(path)>0):
@@ -439,17 +455,17 @@ class Graph:
 
 		self.world.prevProdDone.numCompTaken = 0
 		prodDefect = self.world.prevProdDone
-		print(prodDefect)
+		#print(prodDefect)
 		comList = prodDefect.compList
 		prodDefect.uncollectComp()
 		count = 0
 		if sum(self.world.compRobot) == 0: 
 			#robot has no components
 			print("robot has no components")
-			print "compWH", self.world.compWareHouse
+			print ("compWH", self.world.compWareHouse)
 			for comp in comList:
 				if self.world.compWareHouse[comp.compID-1] > 0:
-					print "already in the WH", comp.compID
+					print ("already in the WH", comp.compID)
 					comp.collected = True
 					prodDefect.numCompTaken += 1
 
@@ -544,7 +560,8 @@ class Graph:
 					else:
 						path = self.calculatePath(alarm=4, product=prodDefect)
 
-		print "Components Taken", self.world.productsList[0]
+		#print ("Components Taken", self.world.productsList[0])
+		#print (path[0].id)
 		if path[0].id == 10:
 			path = np.delete(path,0)
 		return path
