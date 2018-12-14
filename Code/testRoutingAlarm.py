@@ -3,37 +3,39 @@ import numpy as numpy
 import copy
 
 compWareHouse = [0,0,0,0,0,0]
-compRobot = [0,0]
-avComp = [0,0]
-posRobot = [150,190]
+compRobot = [5,5]
+avComp = [1,1]
+posRobot = [170,180]
 
 graph = eg.Graph()
 
 
 print("Initializing the world")
-graph.setRobotPosition(16,120)
-path = graph.calculatePath()
+graph.setRobotPosition(posRobot[0],posRobot[1])
+path = graph.calculatePath(alarm=True)
 
-"""for node in path:
+print("Current path\n")
+for node in path[0:15]:
 	if node.component != -1:
 		print("nID:",node.id,"cID:", node.component.compID,"pID:",node.component.prodID )
 	else:
-		print("nID:",node.id)"""
-
+		print("nID:",node.id)
+print ("\n_______________________________________")
 graph.world.prevProdDone = copy.copy(graph.world.productsList[9])#product4
 graph.world.productsList[0].inProgress = True
-print(graph.world.productsList[0].compIDList)
+#print(graph.world.productsList[0].compIDList)
 graph.robotNode.x = posRobot[0]
 graph.robotNode.y = posRobot[1]
 graph.world.compRobot = compRobot
 graph.world.compAvRobot = avComp
 graph.world.compWareHouse = compWareHouse
 
-path = graph.alarmActivated(mode = 1)
-
-for node in path[0:20]:
+path = graph.alarmActivated(mode = 0)
+print("_______________________________________\n")
+print("Path after a defected product\n")
+for node in path[0:18]:
 	if node.component != -1:
-		print("nID:",node.id,"cID:", node.component.compID,"pID:",node.component.prodID )
+		print("nID:",node.id,"cID:", node.component.compID,"pID:",node.component.prodID, "cReturn", node.component.returnComp )
 	else:
 		print("nID:",node.id)
 
