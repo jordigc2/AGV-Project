@@ -278,12 +278,14 @@ class Graph:
 				if alarm == 3:
 					actNode = self.robotNode
 					#print("actNode:",actNode.id)
+					prevComp = -1
 					for compID in self.world.compRobot:#add components to return into the  path
 						if compID != 0:
 							node = self.listOfNodes[compID+self.world.numObjects-1]
-							if node.component.returnComp:
+							if node.component.returnComp and not prevComp == compID:
 								path = np.insert(path,len(path),node)
 								actNode = node
+						prevComp = compID
 
 					closestNode = self.getClosestComp(nodesComp, actNode)
 					if closestNode != 0:# if zero, there are no left components to take of the product
@@ -521,15 +523,17 @@ class Graph:
 
 						self.world.compAvRobot = [0,0]
 					self.world.productsList = np.insert(self.world.productsList, 0, prodDefect)
+					prevComp = -1
 					for compID in self.world.compRobot:
 						node = self.listOfNodes[compID+self.world.numObjects-1]
 						#print("nodeID:", node.id, "compID:",compID)
 						if compID != 0:
-							if not compID in prodDefect.compIDList:
+							if not compID in prodDefect.compIDList or prevComp == compID:
 								node.component.returnComp = True
 								self.world.compRetRobot[0] = compID
 							else:
 								node.component.returnComp = False
+						prevComp = compID
 					if mode == 0:
 						path = self.calculatePath(alarm=3)
 					else:
