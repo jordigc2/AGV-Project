@@ -289,9 +289,9 @@ class Graph:
 
 					closestNode = self.getClosestComp(nodesComp, actNode)
 					if closestNode != 0:# if zero, there are no left components to take of the product
-						path = np.insert(path,len(path),closestNode)
 						closestNode.component.collected = True
 						compTaken = 0
+						path = np.insert(path,len(path),self.gotToWH(closestNode,FROM_NODE))
 					actNode = closestNode
 
 				elif alarm == 4:

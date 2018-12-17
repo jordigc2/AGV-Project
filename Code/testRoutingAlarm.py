@@ -3,8 +3,8 @@ import numpy as numpy
 import copy
 
 compWareHouse = [0,0,0,0,0,0]
-compRobot = [3,3]
-avComp = [1,1]
+compRobot = [5,3]
+avComp = [1,0]
 posRobot = [120,180]
 
 graph = eg.Graph()
