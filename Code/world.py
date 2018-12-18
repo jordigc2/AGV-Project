@@ -6,7 +6,7 @@ import copy
 
 productDescrURL = "./Products_Composition/ProductsDescription.xml"
 compDescrURL = "./Products_Composition/ComponentsDescription.xml"
-prodListURL = "./Products_Composition/productionPlan.csv"
+prodListURL = "./Products_Composition/productionPlan30.csv"
 objectsDescrURL = "./Products_Composition/mapPositions.xml"
 
 dicProd = {}

@@ -1,25 +1,22 @@
 import envGraph as eg
-import numpy as numpy
+import numpy as np
 import copy
+import math as m
+import matplotlib.pyplot as plt
 
 compWareHouse = [0,0,0,0,0,0]
 compRobot = [5,3]
 avComp = [1,0]
-posRobot = [120,180]
+posRobot = [120,120]
 
 graph = eg.Graph()
-
+path = np.array([], dtype="object")
 
 print("Initializing the world")
 graph.setRobotPosition(posRobot[0],posRobot[1])
 path = graph.calculatePath(alarm=True)
 
-print("Current path\n")
-for node in path[0:15]:
-	if node.component != -1:
-		print("nID:",node.id,"cID:", node.component.compID,"pID:",node.component.prodID )
-	else:
-		print("nID:",node.id)
+"""
 print ("\n_______________________________________")
 graph.world.prevProdDone = copy.copy(graph.world.productsList[9])#product4
 graph.world.productsList[0].inProgress = True
@@ -37,6 +34,6 @@ for node in path[0:18]:
 	if node.component != -1:
 		print("nID:",node.id,"cID:", node.component.compID,"pID:",node.component.prodID, "cReturn", node.component.returnComp )
 	else:
-		print("nID:",node.id)
+		print("nID:",node.id)"""
 
 
