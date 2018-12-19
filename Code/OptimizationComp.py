@@ -4,13 +4,14 @@ import copy
 import math as m
 import matplotlib.pyplot as plt
 
-compWareHouse = [0,0,0,0,0,0]
+compWareHouse = [0,0,0,2,0,0]
 compRobot = [5,3]
 avComp = [1,0]
-posRobot = [120,180]
+posRobot = [150,180]
 
 graph = eg.Graph()
 path = np.array([], dtype="object")
+graph.world.compWareHouse = compWareHouse
 
 
 print("Initializing the world")
@@ -25,8 +26,18 @@ for product in graph.world.productsList:
 	graph.setRobotPosition(path[len(path)-1].x, path[len(path)-1].y)
 	count += 1
 
-print("\nCurrent path\n")
-for node in path:
+print("\nGreedy path")
+print("Components WH:", compWareHouse)
+for node in path1[0:10]:
+	if node.component != -1:
+		print("nID:",node.id,"cID:", node.component.compID,"pID:",node.component.prodID )
+	else:
+		print("nID:",node.id)
+
+print ("--------------")
+print("\nOptimal path")
+print("Components WH:", compWareHouse)
+for node in path[0:10]:
 	if node.component != -1:
 		print("nID:",node.id,"cID:", node.component.compID,"pID:",node.component.prodID )
 	else:
