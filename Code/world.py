@@ -27,6 +27,7 @@ class Product():
 		self.compIDList = []
 		self.inProgress = False #set to True when the robot is picking the components
 		self.numCompTaken = 0
+		self.startingTime = 0
 
 	def setComponents(self, compList):
 		self.compList = compList
