@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Components>
+	<cmp name = "cmp1">
+		<x> 50 </x>
+		<y> 200 </y>
+	</cmp>
+	<cmp name = "cmp2">
+		<x> 80 </x>
+		<y> 200 </y>
+	</cmp>
+	<cmp name = "cmp3">
+		<x> 110 </x>
+		<y> 205 </y>
+	</cmp>	
+	<cmp name = "cmp4">
+		<x> 140 </x>
+		<y> 205 </y>
+	</cmp>
+
+	<cmp name = "cmp5">
+		<x> 170 </x>
+		<y> 200 </y>
+	</cmp>
+
+	<cmp name = "cmp6">
+		<x> 200 </x>
+		<y> 200 </y>
+	</cmp>
+</Components>

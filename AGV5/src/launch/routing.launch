@@ -1,0 +1,7 @@
+<launch>
+
+<node pkg="AGV5" type="routingManager2.py" name="manager_node" />
+<node pkg="AGV5" type="robotEulPos.py" name="euler_pos_node" />
+<node pkg="AGV5" type="go_to_goalBW.py" name="control_node"/>
+
+</launch>

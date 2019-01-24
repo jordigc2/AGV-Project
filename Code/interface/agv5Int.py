@@ -24,14 +24,37 @@ class AGV5Inter(Frame):
         self.wndw = Tk()
         self.wndw.wm_title('AGV5 Tracker')
         self.wndw.config(background="#464B92")
-        self.wndw.geometry("1050x680+0+0") 
+        self.wndw.geometry("1080x650+0+0") 
         self.wndw.resizable(0, 0)
-        self.build()
-        self.insertMapImg('mapImg/map_original.gif')
         self.value = 0
         self.elapTime = time.time()
+        self.listProd = np.array(["prod1","prod2","prod1","prod4"])
+        self.prodAssembling = "prod3"
+        self.prodAssembled = "prod1"
+        self.compRobot = [0,0]
+        self.compWH = [0,0,0,0,0,0]
+        self.x = 1.231
+        self.y = 2.321
+        self.currentNode = 0
+        self.goalNode = 1
+
+        self.build()
+        self.insertMapImg('mapImg/map_original.gif')
         self.setValueTitles()
         self.loop()
+
+
+    def setValuesStatus(listProd, prodAss, prodFin, comRob, comWH, x, y, currNode, goalNode):
+        self.listProd = listProd
+        self.prodAssembling = prodAss
+        self.prodAssembled = prodFin
+        self.compRobot = comRob
+        self.compWH = comWH
+        self.x = x
+        self.y = y
+
+        self.currentNode = currNode
+        self.goalNode = goalNode
 
     def build(self):
 
@@ -66,21 +89,21 @@ class AGV5Inter(Frame):
 
     def selectMap(self):
 
-        if currentNode == 0 or goalNode == 0:
-            if currentNode != 0:
-                url = 'mapImg/mapW_'+str(currentNode)+".gif"
+        if self.currentNode == 0 or self.goalNode == 0:
+            if self.currentNode != 0:
+                url = 'mapImg/mapW_'+str(self.currentNode)+".gif"
             else:
-                url = 'mapImg/mapW_'+str(goalNode)+".gif"
-        elif currentNode <= 3 or goalNode <= 3:
-            if currentNode < goalNode:
-                url = 'mapImg/map'+str(currentNode-1)+"_p"+str(goalNode-3)+".gif"
+                url = 'mapImg/mapW_'+str(self.goalNode)+".gif"
+        elif self.currentNode <= 3 or self.goalNode <= 3:
+            if self.currentNode < self.goalNode:
+                url = 'mapImg/map'+str(self.currentNode-1)+"_p"+str(self.goalNode-3)+".gif"
             else:
-                url = 'mapImg/map'+str(goalNode-1)+"_p"+str(currentNode-3)+".gif"
-        elif currentNode <= 9 and goalNode <= 9 and (currentNode > 3 or goalNode > 3):
-            if currentNode < goalNode:
-                url = 'mapImg/map_p'+str(currentNode-3)+"_p"+str(goalNode-3)+".gif"
+                url = 'mapImg/map'+str(self.goalNode-1)+"_p"+str(self.currentNode-3)+".gif"
+        elif self.currentNode <= 9 and self.goalNode <= 9 and (self.currentNode > 3 or self.goalNode > 3):
+            if self.currentNode < self.goalNode:
+                url = 'mapImg/map_p'+str(self.currentNode-3)+"_p"+str(self.goalNode-3)+".gif"
             else:
-                url = 'mapImg/map_p'+str(goalNode-3)+"_p"+str(currentNode-3)+".gif"
+                url = 'mapImg/map_p'+str(self.goalNode-3)+"_p"+str(self.currentNode-3)+".gif"
         else:
             url = 'mapImg/map_original.gif'
 
@@ -130,18 +153,17 @@ class AGV5Inter(Frame):
 
     def getSystemStatus(self):
 
-        global listProd, prodAssembled, prodAssembled, x, y
         listProdTxt = ""
-        for i in listProd:
+        for i in self.listProd:
             listProdTxt = listProdTxt + " " + i + " "
 
         robotCmp = ""
-        for i in compRobot:
+        for i in self.compRobot:
             robotCmp = robotCmp + " " + str(i) + " "
 
 
         whCmp = ""
-        for i in compWH:
+        for i in self.compWH:
             whCmp = whCmp + " " + str(i) + " "
 
         t = int(time.time()-self.elapTime)
@@ -161,10 +183,10 @@ class AGV5Inter(Frame):
         self.txtValue4 = Label(self.topLeftFrame, text=whCmp, font=("Fixedsys", 12))
         self.txtValue4.grid(row=4, column=1)
 
-        self.txtValue5 = Label(self.topLeftFrame, text=str(x), font=("Fixedsys", 12))
+        self.txtValue5 = Label(self.topLeftFrame, text=str(self.x), font=("Fixedsys", 12))
         self.txtValue5.grid(row=5, column=1)
 
-        self.txtValue6 = Label(self.topLeftFrame, text=str(y), font=("Fixedsys", 12))
+        self.txtValue6 = Label(self.topLeftFrame, text=str(self.y), font=("Fixedsys", 12))
         self.txtValue6.grid(row=6, column=1)
 
         self.txtValue7 = Label(self.topLeftFrame, text=str(t), font=("Fixedsys", 12))
@@ -211,17 +233,17 @@ class AGV5Inter(Frame):
 
     def loop(self):
 
-        global listProd, currentNode, goalNode
-        currentNode = random.randint(1,3)
-        goalNode = random.randint(4,9)
+        self.currentNode = random.randint(1,3)
+        self.goalNode = random.randint(4,9)
         if self.value != 0:
-            self.destroyWidgets()
+            pass
+            #self.destroyWidgets()
         if self.value%2 == 0:
             self.insertRobotImg('robotImg/robot2.gif')
-            listProd = np.array(["prod1","prod2","prod1","prod4"])
+            self.listProd = np.array(["prod1","prod2","prod1","prod4"])
         else:
             self.insertRobotImg('robotImg/robot.gif')
-            listProd = np.array(["prod4","prod2","prod2","prod3"])
+            self.listProd = np.array(["prod4","prod2","prod2","prod3"])
         self.selectMap()
         self.getSystemStatus()
         self.value += 1
