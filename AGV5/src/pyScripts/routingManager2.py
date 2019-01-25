@@ -50,6 +50,7 @@ def test(data):
 			print "B",prodList[0].prodID, prodList[0], prodList[0].numCompTaken
 			print "time to create alarm path: ", time.time()-t0
 
+
 		#set 1st next position to go
 		nextNode = path[0]
 		path = np.delete(path,0)
@@ -76,6 +77,15 @@ def test(data):
 					if not nextNode.component.returnComp:
 						prodList[0].numCompTaken += 1
 				nextPos.compID = nextNode.component.compID
+
+		print "nextNodeId:", nextNode.id
+		listProd = []
+		for i in range(4):
+			listProd.append(prodList[i].prodID)
+		rospy.set_param('prodList', listProd)
+		rospy.set_param('nextNode', nextNode.id)
+		rospy.set_param('prevProd', 0)
+
 		pubPos.publish(nextPos)
 		newPath = False
 		
@@ -127,6 +137,12 @@ def test(data):
 					pubAssembly.publish(True)
 		print "nextPos: ", [nextNode.x/100.0, nextNode.y/100.0]
 		pubPos.publish(nextPos)
+		listProd = []
+		for i in range(4):
+			listProd.append(prodList[i].prodID)
+		rospy.set_param('prodList', listProd)
+		rospy.set_param('nextNode', nextNode.id)
+		rospy.set_param('prevProd', graph.world.prevProdDone)
 		
 
 rospy.init_node('Routing')

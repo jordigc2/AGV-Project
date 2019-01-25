@@ -1,7 +1,10 @@
 <launch>
 
-<node pkg="AGV5" type="routingManager2.py" name="manager_node" />
+<!--<node pkg="rosserial_arduino" type="serial_node.py" args="/dev/ttyACM0" name="serialConn"/>-->
 <node pkg="AGV5" type="robotEulPos.py" name="euler_pos_node" />
-<node pkg="AGV5" type="go_to_goalBW.py" name="control_node"/>
+<node pkg="AGV5" type="go_to_goal.py" name="control_node"/>
+<node pkg="AGV5" type="robotCompManager.py" name="robotCompManager"/>
+<node pkg="AGV5" type="WareHouseManager.py" name="WH_Manager"/>
+<node pkg="AGV5" type="routingManagerOp.py" name="manager_node" />
 
 </launch>

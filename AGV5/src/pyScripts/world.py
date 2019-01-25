@@ -6,7 +6,7 @@ import copy
 
 productDescrURL = "/home/ubuntu/catkin_ws/src/AGV5/src/pyScripts/Products_Composition/ProductsDescription.xml"
 compDescrURL = "/home/ubuntu/catkin_ws/src/AGV5/src/pyScripts/Products_Composition/ComponentsDescription.xml"
-prodListURL = "/home/ubuntu/catkin_ws/src/AGV5/src/pyScripts//Products_Composition/productionPlan30.csv"
+prodListURL = "/home/ubuntu/catkin_ws/src/AGV5/src/pyScripts//Products_Composition/productionPlan_contest.csv"
 objectsDescrURL = "/home/ubuntu/catkin_ws/src/AGV5/src/pyScripts/Products_Composition/mapPositions.xml"
 
 dicProd = {}

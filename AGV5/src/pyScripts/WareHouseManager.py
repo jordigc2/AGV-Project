@@ -54,14 +54,10 @@ def isRobotClose(data):
 			timePassed = 0
 			prodAssembled = True
 		if timePassed >= TIME_QC and prodAssembled:
-			qc = input("press 1 for OK or 0 for defect product and 'ENTER':\n")
 			timeAssembly = 0
 			prodAssembled = False
 			timePassed = 0
-			if qc == 0:
-				qcResult = True
-			else:
-				qcResult = False
+			qcResult = True
 			publishAlarm(qcResult)
 
 
@@ -95,7 +91,7 @@ rospy.init_node('WareHouse')
 rospy.Subscriber('robotPos', robot, isRobotClose)
 rospy.Subscriber('goalPos', goalPos, getGoal)
 rospy.Subscriber('productDone', Bool, getProductStatus)
-alPub = rospy.Publisher('Alarm', Bool, queue_size=10)
+alPub = rospy.Publisher('QC_int', Bool, queue_size=10)
 def main():
 	rospy.spin()
 

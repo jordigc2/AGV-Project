@@ -236,8 +236,7 @@ class AGV5Inter(Frame):
         self.currentNode = random.randint(1,3)
         self.goalNode = random.randint(4,9)
         if self.value != 0:
-            pass
-            #self.destroyWidgets()
+            self.destroyWidgets()
         if self.value%2 == 0:
             self.insertRobotImg('robotImg/robot2.gif')
             self.listProd = np.array(["prod1","prod2","prod1","prod4"])

@@ -58,6 +58,7 @@ def test(data):
 			prodList = graph.world.productsList
 			print "B",prodList[0].prodID, prodList[0]
 			print "time to create alarm path: ", time.time()-t0
+			rospy.set_param('prevProd', -1)
 
 		#set 1st next position to go
 		nextNode = path[0]
@@ -84,6 +85,15 @@ def test(data):
 					prodList[0].inProgress = True
 					prodList[0].startingTime = time.time()
 				nextPos.compID = nextNode.component.compID
+
+		listProd = []
+		for i in range(4):
+			listProd.append(prodList[i].prodID)
+		rospy.set_param('prodList', listProd)
+		print nextNode.id
+		rospy.set_param('nextNode', nextNode.id)
+		rospy.set_param('prevProd', 0)
+
 		pubPos.publish(nextPos)
 		newPath = False
 		
@@ -136,6 +146,14 @@ def test(data):
 		print "nextPos: ", [nextNode.x/100.0, nextNode.y/100.0]
 		pubPos.publish(nextPos)
 		
+		listProd = []
+		for i in range(4):
+			listProd.append(prodList[i].prodID)
+		rospy.set_param('prodList', listProd)
+		print "nodeID:",nextNode.id
+		rospy.set_param('nextNode', nextNode.id)
+		if graph.world.prevProdDone != -1:
+			rospy.set_param('prevProd', graph.world.prevProdDone.prodID)
 
 rospy.init_node('Routing')
 pubPos = rospy.Publisher('goalPos', goalPos, queue_size=10)
